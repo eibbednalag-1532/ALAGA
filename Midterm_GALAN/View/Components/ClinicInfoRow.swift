@@ -26,7 +26,6 @@ struct ClinicName: View {
                     .offset(x: -55, y: 12)
         }
         .padding(.horizontal, 16)
-        //Prevents the hstack from exceeding the screen
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
