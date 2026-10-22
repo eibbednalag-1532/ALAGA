@@ -4,8 +4,8 @@
 //
 //  Created by Mac-LAB on 9/15/26.
 //
-import SwiftUI
 
+import SwiftUI
 struct Acc: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -39,8 +39,8 @@ struct Acc: View {
         }
     }
 }
-
 #Preview {
     Acc()
 }
+
 
