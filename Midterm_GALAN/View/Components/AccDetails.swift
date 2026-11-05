@@ -11,11 +11,17 @@ struct AccDetails: View {
     let detsName: String
     
     var body: some View {
-        VStack {
-            Text(detsName)
-                .font(.system(size: 30, weight: .semibold, design: .rounded))
-                .offset(x: -30, y: 15)
-                .padding()
+        VStack(alignment: .leading, spacing: 25) {
+            HStack {
+                Text(detsName)
+                    .font(.system(size: 30, weight: .semibold, design: .rounded))
+                    .padding(.top, 20)
+                    .offset(y: 18)
+                    
+                
+                Spacer()
+            }
+            
             
             Rectangle()
                 .frame(width: 300, height: 45, alignment: .center)
@@ -23,6 +29,8 @@ struct AccDetails: View {
                 .cornerRadius(10)
             
         }
+        .padding(.leading, 30)
+    
         
     }
     
