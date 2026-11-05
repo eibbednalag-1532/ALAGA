@@ -19,8 +19,10 @@ struct PetInfo: View {
                         endAngle: .degrees(360)
                     )
                     .ignoresSafeArea()
-            VStack {
+            VStack(spacing: -40) {
                 PetInfoGreetings()
+                FillPetInfo()
+                SaveButton()
             }
         }
     }
@@ -39,6 +41,39 @@ struct PetInfoGreetings: View {
                 .foregroundStyle(Color.gray)
                 .offset(x: 15, y: -80)
         }
+    }
+}
+
+struct FillPetInfo: View {
+    var body: some View {
+        VStack {
+            AddPetTextField(title: "Pet Name", example: "Buddy")
+            
+            AddPetTextField(title: "Breed", example: "Golden Retiever")
+            
+            AddPetTextField(title: "Age", example: "1")
+            
+            AddPetTextField(title: "Birthdate", example: "December 5, 2025")
+            
+            AddPetTextField(title: "Gender", example: "Male")
+            
+            
+        }
+    }
+}
+
+struct SaveButton: View {
+    @State private var shouldNavigate = false
+    
+    var body: some View {
+        CustomSaveButton(title: "Save") {
+            shouldNavigate = true
+        }
+        .navigationDestination(isPresented: $shouldNavigate) {
+            AddMedHistory()
+        }
+        .padding(.vertical, 70)
+        .padding(.trailing, -10)
     }
 }
 #Preview {
