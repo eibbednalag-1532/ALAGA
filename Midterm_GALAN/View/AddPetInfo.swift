@@ -19,6 +19,9 @@ struct PetInfo: View {
                         endAngle: .degrees(360)
                     )
                     .ignoresSafeArea()
+            VStack {
+                PetInfoGreetings()
+            }
         }
     }
 }
@@ -27,7 +30,14 @@ struct PetInfoGreetings: View {
     var body: some View {
         VStack {
             Text("Pet Information")
-                .font(.system(size: 35, weight: .semibold, design: .rounded))
+                .font(.system(size: 43.5, weight: .bold, design: .rounded))
+                .padding(.vertical, 90)
+                .padding(.leading, 45)
+            
+            Text("Tell Us More About Your Pet")
+                .font(.system(size: 20, weight: .regular))
+                .foregroundStyle(Color.gray)
+                .offset(x: 15, y: -80)
         }
     }
 }
