@@ -41,10 +41,12 @@ struct SettingsTabPreviews: View {
     
 }
 struct ButtonAcc: View {
+    @EnvironmentObject var router: AppRouter
     var body: some View {
         
+        //Opens the Profile page
         Button(action: {
-            
+            router.push(.profile)
         }) {
             VStack(alignment: .leading, spacing: 15) {
                 HStack {
@@ -84,10 +86,12 @@ struct ButtonAcc: View {
     }
 }
 struct ButtonFAQ: View {
+    @EnvironmentObject var router: AppRouter
     var body: some View {
         
+        //Opens the FAQ page
         Button(action: {
-            
+            router.push(.faq)
         }) {
             VStack(alignment: .leading, spacing: 15) {
                 HStack {
@@ -127,10 +131,12 @@ struct ButtonFAQ: View {
     }
 }
 struct ButtonLogout: View {
+    @EnvironmentObject var authController: AuthController
+    @State private var showLogoutConfirm = false
     var body: some View {
         
         Button(action: {
-            
+            showLogoutConfirm = true
         }) {
             VStack(alignment: .leading, spacing: 15) {
                 HStack {
@@ -167,9 +173,23 @@ struct ButtonLogout: View {
             
         }
         .offset(y: -110)
+        //Asks first before going back to the Sign In page
+        .confirmationDialog("Are you sure you want to log out?", isPresented: $showLogoutConfirm, titleVisibility: .visible) {
+            Button("Log Out", role: .destructive) {
+                Task {
+                    await authController.signOut()
+                }
+            }
+            
+            Button("Cancel", role: .cancel) {}
+        }
     }
 }
 
 #Preview {
-   SettingsTab()
+    NavigationStack {
+        SettingsTab()
+    }
+    .environmentObject(AppRouter())
+    .environmentObject(AuthController())
 }

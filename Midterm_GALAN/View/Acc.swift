@@ -9,6 +9,8 @@ import SwiftUI
 
 
 struct Acc: View {
+    @EnvironmentObject var router: AppRouter
+    @EnvironmentObject var profileController: ProfileController
     var body: some View {
         ZStack(alignment: .topLeading) {
             AngularGradient(
@@ -26,11 +28,19 @@ struct Acc: View {
                     ProfileCrcle()
                     FullDetails()
                     
-                    
+                    //Saves to Supabase and goes back to the Profile page
+                    CustomSaveButton(title: profileController.isLoading ? "Saving..." : "Save") {
+                        Task {
+                            await profileController.saveProfile(router: router)
+                        }
+                    }
+                    .disabled(profileController.isLoading)
+                    .padding(.top, 50)
                     
             }
                 .padding(40)
         }
+        .errorAlert($profileController.errorMessage)
     }
 }
 struct ProfileCrcle : View {
@@ -68,13 +78,15 @@ struct ProfileCrcle : View {
 // MARK: Details
 
 struct FullDetails: View {
+    @EnvironmentObject var profileController: ProfileController
     var body: some View {
         
-        AccDetails(detsName: "Username")
+        AccDetails(detsName: "Username", text: $profileController.username)
         
-        AccDetails(detsName: "Email")
+        //Email comes from the login, so it can't be edited here
+        AccDetails(detsName: "Email", text: $profileController.email, isReadOnly: true)
         
-        AccDetails(detsName: "Contact Number")
+        AccDetails(detsName: "Contact Number", text: $profileController.contactNumber)
         
         
         
@@ -85,7 +97,11 @@ struct FullDetails: View {
 
 
 #Preview {
-    Acc()
+    NavigationStack {
+        Acc()
+    }
+    .environmentObject(AppRouter())
+    .environmentObject(ProfileController())
 }
 
 

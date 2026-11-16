@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct SignIn: View {
-    @Binding var currentScreen: String
+    @EnvironmentObject var authController: AuthController
     var body: some View {
         ZStack {
             AngularGradient(
@@ -25,10 +25,11 @@ struct SignIn: View {
                 SigninButton()
                 OrDesign()
                 GoogleButton()
-                SigninText(currentScreen: $currentScreen)
+                SigninText()
             }
             .padding()
         }
+        .errorAlert($authController.errorMessage)
     }
 }
 
@@ -75,30 +76,44 @@ struct LogoDesign: View {
 }
 
 struct LogIn: View {
-    @State private var loginEmail: String = ""
-    @State private var loginPassword: String = ""
+    @EnvironmentObject var authController: AuthController
     var body: some View {
         VStack {
-            TextField("Email Address", text: $loginEmail)
+            TextField("Email Address", text: $authController.loginEmail)
                 .textFieldStyle(.roundedBorder)
+                .keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
                 .frame(maxWidth: 300, maxHeight: 35)
                 .padding(.bottom,8)
             
-            TextField("Password", text: $loginPassword)
+            SecureField("Password", text: $authController.loginPassword)
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 300)
                 .padding(.bottom, 8)
+            
+            //Shows "Account created! Check your email..." after signing up
+            if let info = authController.infoMessage {
+                Text(info)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(Color.green)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 300)
+            }
             
         }
     }
 }
 
 struct SigninButton: View {
+    @EnvironmentObject var authController: AuthController
     var body: some View {
         Button(action: {
-            
+            Task {
+                await authController.signIn()
+            }
         }) {
-            Text("Sign in")
+            Text(authController.isLoading ? "Signing in..." : "Sign in")
                 .font(.headline)
                 .foregroundStyle(.white)
                 .frame(width: 275, height: 30)
@@ -106,6 +121,7 @@ struct SigninButton: View {
         .buttonStyle(.borderedProminent)
         .tint(.green)
         .padding(.vertical,40)
+        .disabled(authController.isLoading)
         
         
     }
@@ -157,7 +173,7 @@ struct GoogleButton: View {
     
 }
 struct SigninText: View {
-    @Binding var currentScreen: String
+    @EnvironmentObject var authController: AuthController
     var body: some View {
         HStack {
             Text("Don't have an account?")
@@ -165,7 +181,7 @@ struct SigninText: View {
                 .foregroundStyle(Color.gray)
             
             Button(action: {
-            currentScreen = "signup"
+            authController.goToSignUp()
             }) {
                 Text("Sign up")
                     .font(.system(size: 15, weight: .regular))
@@ -176,6 +192,7 @@ struct SigninText: View {
     }
 }
 #Preview {
-    SignIn(currentScreen: .constant("signin"))
+    SignIn()
+        .environmentObject(AuthController())
 }
 

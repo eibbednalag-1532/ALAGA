@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct PetInfo: View {
+    @EnvironmentObject var addPetController: AddPetController
     var body: some View {
         ZStack(alignment: .topLeading) {
                     AngularGradient(
@@ -25,6 +26,7 @@ struct PetInfo: View {
                 SaveButton()
             }
         }
+        .errorAlert($addPetController.errorMessage)
     }
 }
 
@@ -45,17 +47,18 @@ struct PetInfoGreetings: View {
 }
 
 struct FillPetInfo: View {
+    @EnvironmentObject var addPetController: AddPetController
     var body: some View {
         VStack {
-            AddPetTextField(title: "Pet Name", example: "Buddy")
+            AddPetTextField(title: "Pet Name", example: "Buddy", text: $addPetController.petName)
             
-            AddPetTextField(title: "Breed", example: "Golden Retiever")
+            AddPetTextField(title: "Breed", example: "Golden Retiever", text: $addPetController.breed)
             
-            AddPetTextField(title: "Age", example: "1")
+            AddPetTextField(title: "Age", example: "1", text: $addPetController.age)
             
-            AddPetTextField(title: "Birthdate", example: "December 5, 2025")
+            AddPetTextField(title: "Birthdate", example: "December 5, 2025", text: $addPetController.birthdate)
             
-            AddPetTextField(title: "Gender", example: "Male")
+            AddPetTextField(title: "Gender", example: "Male", text: $addPetController.gender)
             
             
         }
@@ -63,19 +66,22 @@ struct FillPetInfo: View {
 }
 
 struct SaveButton: View {
-    @State private var shouldNavigate = false
+    @EnvironmentObject var router: AppRouter
+    @EnvironmentObject var addPetController: AddPetController
     
     var body: some View {
+        //Goes to Medical History, the back button brings you back here
         CustomSaveButton(title: "Save") {
-            shouldNavigate = true
-        }
-        .navigationDestination(isPresented: $shouldNavigate) {
-            AddMedHistory()
+            addPetController.goToMedHistory(router: router)
         }
         .padding(.vertical, 70)
         .padding(.trailing, -10)
     }
 }
 #Preview {
-    PetInfo()
+    NavigationStack {
+        PetInfo()
+    }
+    .environmentObject(AppRouter())
+    .environmentObject(AddPetController())
 }

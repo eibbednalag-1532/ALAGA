@@ -25,7 +25,7 @@ struct AddMedHistory: View {
                 FillMedHstory()
                 
                 Spacer(minLength: 22)
-                SaveButton()
+                MedHistorySaveButton()
             }
             
             
@@ -51,21 +51,22 @@ struct MedHistoryGreetings: View {
     }
 }
 struct FillMedHstory: View {
+    @EnvironmentObject var addPetController: AddPetController
     var body: some View {
         VStack(spacing: 6) {
-            AddPetTextField(title: "Weight(kg)", example: "3.5")
+            AddPetTextField(title: "Weight(kg)", example: "3.5", text: $addPetController.weight)
             
-            AddPetTextField(title: "Current Illness(if applicable)", example: "N/A")
+            AddPetTextField(title: "Current Illness(if applicable)", example: "N/A", text: $addPetController.currentIllness)
             
-            AddPetTextField(title: "Date of Diagnosis", example: "N/A")
+            AddPetTextField(title: "Date of Diagnosis", example: "N/A", text: $addPetController.currentIllnessDate)
             
-            AddPetTextField(title: "Medicine Taken", example: "December 5, 2025")
+            AddPetTextField(title: "Medicine Taken", example: "December 5, 2025", text: $addPetController.currentMedicine)
             
-            AddPetTextField(title: "Post Illness(if applicable)", example: "Allergy")
+            AddPetTextField(title: "Post Illness(if applicable)", example: "Allergy", text: $addPetController.pastIllness)
             
-            AddPetTextField(title: "Date of Diagnosis", example: "June 1, 2026")
+            AddPetTextField(title: "Date of Diagnosis", example: "June 1, 2026", text: $addPetController.pastIllnessDate)
             
-            AddPetTextField(title: "Medicine Taken", example: "Antihistamine")
+            AddPetTextField(title: "Medicine Taken", example: "Antihistamine", text: $addPetController.pastMedicine)
             
             Spacer(minLength: 0)
             
@@ -75,6 +76,23 @@ struct FillMedHstory: View {
         .offset(y: 65)
     }
 }
+struct MedHistorySaveButton: View {
+    @EnvironmentObject var router: AppRouter
+    @EnvironmentObject var addPetController: AddPetController
+    
+    var body: some View {
+        //Goes to Active Medication, the back button brings you back here
+        CustomSaveButton(title: "Save") {
+            addPetController.goToActiveMed(router: router)
+        }
+        .padding(.vertical, 70)
+        .padding(.trailing, -10)
+    }
+}
 #Preview {
-    AddMedHistory()
+    NavigationStack {
+        AddMedHistory()
+    }
+    .environmentObject(AppRouter())
+    .environmentObject(AddPetController())
 }

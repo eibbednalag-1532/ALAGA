@@ -7,6 +7,8 @@
 import SwiftUI
 
 struct Profile: View {
+    @EnvironmentObject var router: AppRouter
+    @EnvironmentObject var profileController: ProfileController
     var body: some View {
         ZStack(alignment: .topLeading) {
             AngularGradient(
@@ -21,12 +23,21 @@ struct Profile: View {
             VStack(alignment: .leading, spacing: 10) {
                 
                 IconProfile()
-                Name()
-                EmailAcc()
-                ContactNumber()
+                Name(value: profileController.displayUsername)
+                EmailAcc(value: profileController.displayEmail)
+                ContactNumber(value: profileController.displayContactNumber)
+                
+                //Opens the Account page to edit the profile
+                CustomSaveButton(title: "Edit Profile") {
+                    profileController.startEditing(router: router)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 40)
+                .offset(x: 20)
                 
             }
         }
+        .errorAlert($profileController.errorMessage)
         
     }
 }
@@ -56,6 +67,7 @@ struct IconProfile: View {
     }
 }
 struct Name: View {
+    let value: String
     var body: some View {
         VStack (alignment: .leading, spacing: 10){
             Text("Username")
@@ -69,7 +81,7 @@ struct Name: View {
                     .cornerRadius(10)
                     .offset(x: 40)
                 
-                Text("Dorothy Mae Sanchez")
+                Text(value)
                     .font(.system(size: 18.5, weight: .regular))
             }
             
@@ -77,6 +89,7 @@ struct Name: View {
     }
 }
 struct EmailAcc: View {
+    let value: String
     var body: some View {
         VStack (alignment: .leading, spacing: 10){
             Text("Email")
@@ -90,7 +103,7 @@ struct EmailAcc: View {
                     .cornerRadius(10)
                     .offset(x: 40)
                 
-                Text("dorothysanchez@gmail.com")
+                Text(value)
                     .font(.system(size: 18.5, weight: .regular))
                     .foregroundColor(.black)
                     .offset(x: 26)
@@ -99,6 +112,7 @@ struct EmailAcc: View {
     }
 }
 struct ContactNumber: View {
+    let value: String
     var body: some View {
         VStack (alignment: .leading, spacing: 10){
             Text("Contact Number")
@@ -112,7 +126,7 @@ struct ContactNumber: View {
                     .cornerRadius(10)
                     .offset(x: 40)
                 
-                Text("09825402984")
+                Text(value)
                     .font(.system(size: 18.5, weight: .regular))
                     .offset(x: -28)
             }
@@ -121,5 +135,9 @@ struct ContactNumber: View {
     }
 }
 #Preview {
-    Profile()
+    NavigationStack {
+        Profile()
+    }
+    .environmentObject(AppRouter())
+    .environmentObject(ProfileController())
 }

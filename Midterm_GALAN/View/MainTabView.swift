@@ -7,12 +7,17 @@
 import SwiftUI
 
 struct MainTabView: View {
-    @State private var selectedTab: Int = 0
+    @StateObject private var router = AppRouter()
+    @StateObject private var homeController = HomeController()
+    @StateObject private var petController = PetController()
+    @StateObject private var addPetController = AddPetController()
+    @StateObject private var reminderController = ReminderController()
+    @StateObject private var profileController = ProfileController()
     
     var body: some View {
         
-        NavigationStack {
-            TabView(selection: $selectedTab) {
+        NavigationStack(path: $router.path) {
+            TabView(selection: $router.selectedTab) {
                 
                 HomeTab()
                     .tabItem {
@@ -40,6 +45,41 @@ struct MainTabView: View {
             }
             .tint(Color.green)
             .navigationBarBackButtonHidden(true)
+            // MARK: Every page that can be opened from the tabs
+            .navigationDestination(for: AppRoute.self) { route in
+                switch route {
+                case .petDetails(let pet):
+                    PetDetails(pet: pet)
+                case .addPetInfo:
+                    PetInfo()
+                case .addMedHistory:
+                    AddMedHistory()
+                case .addActiveMed:
+                    AddActiveMed()
+                case .addEvent:
+                    AddEvent()
+                case .clinics:
+                    ClinicsInfo()
+                case .faq:
+                    FAQ()
+                case .profile:
+                    Profile()
+                case .account:
+                    Acc()
+                }
+            }
+        }
+        .environmentObject(router)
+        .environmentObject(homeController)
+        .environmentObject(petController)
+        .environmentObject(addPetController)
+        .environmentObject(reminderController)
+        .environmentObject(profileController)
+        //Loads the user's data from Supabase when the tabs open
+        .task {
+            await petController.fetchPets()
+            await reminderController.fetchReminders()
+            await profileController.fetchProfile()
         }
     }
 }
@@ -47,4 +87,5 @@ struct MainTabView: View {
 
 #Preview {
     MainTabView()
+        .environmentObject(AuthController())
 }

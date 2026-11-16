@@ -8,6 +8,12 @@
 import SwiftUI
 
 struct PetTab: View {
+    @EnvironmentObject var router: AppRouter
+    @EnvironmentObject var addPetController: AddPetController
+    @EnvironmentObject var reminderController: ReminderController
+    @EnvironmentObject var petController: PetController
+    @State private var showChooseAction = false
+    
     var body: some View {
         ZStack(alignment: .topLeading) {
             AngularGradient(
@@ -21,10 +27,6 @@ struct PetTab: View {
             .ignoresSafeArea()
             VStack(alignment: .leading, spacing: 10) {
                 PetGreeting()
-                AddButton()
-                
-                    .padding(.horizontal)
-                    .padding(.top, 10)
                 
                 
                 Color.clear.frame(height: 15)
@@ -32,12 +34,32 @@ struct PetTab: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 15){
-                        
+                        PetList()
                     }
                     .padding(.horizontal)
+                    .padding(.bottom, 90)
+                }
+                .refreshable {
+                    await petController.fetchPets()
                 }
             }
+            
+            AddButton {
+                showChooseAction = true
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            .padding(.trailing, 25)
+            .padding(.bottom, 20)
+            
+            if showChooseAction {
+                ChooseActionSheet(
+                    isPresented: $showChooseAction,
+                    onAddPet: { addPetController.startNewPet(router: router) },
+                    onAddEvent: { reminderController.startNewEvent(router: router) }
+                )
+            }
         }
+        .errorAlert($petController.errorMessage)
     }
 }
 struct PetGreeting: View {
@@ -65,28 +87,66 @@ struct PetGreeting: View {
     }
 }
 
+//Green button, also reused in the Reminder Tab
 struct AddButton: View {
+    var action: () -> Void = {}
+    
     var body: some View {
         VStack {
-            ZStack {
-                Button(action: {
-                    
-                }) {
+            Button(action: action) {
+                ZStack {
                     Circle()
-                        .tint(.green)
-                        .frame(width: 70)
-                }
-                
-                Image(systemName: "plus")
-                    .font(.system(size: 40))
-                    .foregroundStyle(Color.white)
+                        .fill(Color.green)
+                        .frame(width: 70, height: 70)
                     
+                    Image(systemName: "plus")
+                        .font(.system(size: 40))
+                        .foregroundStyle(Color.white)
+                }
             }
         }
-        .offset(x: 275, y: 538)
+    }
+}
+struct PetList: View {
+    @EnvironmentObject var petController: PetController
+    var body: some View {
+        VStack(spacing: 15) {
+            if petController.isLoading && petController.pets.isEmpty {
+                ProgressView()
+                    .padding(.top, 40)
+            } else if petController.pets.isEmpty {
+                Text("No pets yet. Tap the + button to add your first pet!")
+                    .font(.system(size: 16, weight: .regular))
+                    .foregroundStyle(Color.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 40)
+            }
+            
+            ForEach(petController.pets) { pet in
+                PetLink(pet: pet)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+struct PetLink: View {
+    let pet: Pet
+    
+    var body: some View {
+        //Opens Pet Details, the back arrow there brings you back here
+        NavigationLink(value: AppRoute.petDetails(pet)) {
+            PetsCard(petName: pet.name, breed: pet.breed, age: pet.age, iconName: pet.iconName, photoUrl: pet.photoUrl)
+        }
+        .buttonStyle(.plain)
     }
 }
 
 #Preview {
-    PetTab()
+    NavigationStack {
+        PetTab()
+    }
+    .environmentObject(AppRouter())
+    .environmentObject(PetController())
+    .environmentObject(AddPetController())
+    .environmentObject(ReminderController())
 }

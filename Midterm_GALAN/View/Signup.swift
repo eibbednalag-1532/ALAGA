@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct Signup: View {
-    @Binding var currentScreen: String
+    @EnvironmentObject var authController: AuthController
     var body: some View {
         ZStack {
             AngularGradient(
@@ -22,11 +22,13 @@ struct Signup: View {
             VStack {
                 CreateAcc()
                 InfoFields()
-                SignupButton(currentScreen: $currentScreen)
+                SignupButton()
                 OrDesign()
                 GoogleButton()
+                SignupText()
             }
         }
+        .errorAlert($authController.errorMessage)
     }
 }
 struct CreateAcc: View {
@@ -48,34 +50,33 @@ struct CreateAcc: View {
 }
 
 struct InfoFields: View {
-    @State private var firstName: String = ""
-    @State private var lastName: String = ""
-    @State private var email: String = ""
-    @State private var password: String = ""
-    @State private var confirmPassword: String = ""
+    @EnvironmentObject var authController: AuthController
     var body: some View {
         VStack {
-            TextField("First Name", text: $firstName)
+            TextField("First Name", text: $authController.firstName)
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 300, maxHeight: 35)
                 .padding(.bottom,8)
             
-            TextField("Last Name", text: $lastName)
+            TextField("Last Name", text: $authController.lastName)
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 300, maxHeight: 35)
                 .padding(.bottom,8)
             
-            TextField("Email Address", text: $email)
+            TextField("Email Address", text: $authController.email)
+                .textFieldStyle(.roundedBorder)
+                .keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .frame(maxWidth: 300, maxHeight: 35)
+                .padding(.bottom,8)
+            
+            SecureField("Password", text: $authController.password)
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 300, maxHeight: 35)
                 .padding(.bottom,8)
             
-            TextField("Password", text: $password)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 300, maxHeight: 35)
-                .padding(.bottom,8)
-            
-            TextField("Confirm Password", text: $confirmPassword)
+            SecureField("Confirm Password", text: $authController.confirmPassword)
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 300, maxHeight: 35)
                 .padding(.bottom,8)
@@ -84,13 +85,15 @@ struct InfoFields: View {
     }
 }
 struct SignupButton: View {
-    @Binding var currentScreen: String
+    @EnvironmentObject var authController: AuthController
     var body: some View {
         Button(action: {
-            currentScreen = "home"
+            Task {
+                await authController.signUp()
+            }
             
         }) {
-            Text("Sign up")
+            Text(authController.isLoading ? "Creating account..." : "Sign up")
                 .font(.headline)
                 .foregroundStyle(.white)
                 .frame(width: 275, height: 30)
@@ -98,10 +101,33 @@ struct SignupButton: View {
         .buttonStyle(.borderedProminent)
         .tint(.green)
         .padding(.vertical,40)
+        .disabled(authController.isLoading)
         
     }
 }
 
+//Goes back to the Sign In page
+struct SignupText: View {
+    @EnvironmentObject var authController: AuthController
+    var body: some View {
+        HStack {
+            Text("Already have an account?")
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(Color.gray)
+            
+            Button(action: {
+                authController.goToSignIn()
+            }) {
+                Text("Sign in")
+                    .font(.system(size: 15, weight: .regular))
+                    .foregroundStyle(Color.green)
+            }
+        }
+        .offset(y: 35)
+    }
+}
+
 #Preview {
-    Signup(currentScreen: .constant("signin"))
+    Signup()
+        .environmentObject(AuthController())
 }

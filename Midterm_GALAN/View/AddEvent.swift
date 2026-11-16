@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct AddEvent: View {
+    @EnvironmentObject var reminderController: ReminderController
     var body: some View {
         ZStack(alignment: .topLeading) {
             AngularGradient(
@@ -20,13 +21,18 @@ struct AddEvent: View {
             )
             .ignoresSafeArea()
             
-            VStack {
-                EventHeader()
-                EventDetails()
+            ScrollView {
+                VStack {
+                    EventHeader()
+                    EventDetails()
+                    AddDateTime()
+                    EventSaveButton()
+                }
             }
             
             
         }
+        .errorAlert($reminderController.errorMessage)
     }
 }
 struct EventHeader: View {
@@ -47,11 +53,12 @@ struct EventHeader: View {
     }
 }
 struct EventDetails: View {
+    @EnvironmentObject var reminderController: ReminderController
     var body: some View {
         VStack {
-            AddPetTextField(title: "Event Type", example: "e.g Check-Up")
+            AddPetTextField(title: "Event Type", example: "e.g Check-Up", text: $reminderController.eventType)
             
-            AddPetTextField(title: "Pet", example: "e.g Buddy")
+            AddPetTextField(title: "Pet", example: "e.g Buddy", text: $reminderController.petName)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 35)
@@ -59,12 +66,50 @@ struct EventDetails: View {
     }
 }
 struct AddDateTime: View {
+    @EnvironmentObject var reminderController: ReminderController
     var body: some View {
-        
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Date And Time")
+                .font(.system(size: 22, weight: .regular))
+                .foregroundColor(.primary)
+            
+            DatePicker(
+                "Selected Date and Time", selection: $reminderController.eventDate,
+                displayedComponents: [.date, .hourAndMinute]
+            )
+            .datePickerStyle(.graphical)
+            .tint(Color.blue)
+            .padding(10)
+            .background(Color.white)
+            .cornerRadius(15)
+            .frame(width: 320)
+        }
+        .padding(.top, 65)
+    }
+}
+struct EventSaveButton: View {
+    @EnvironmentObject var router: AppRouter
+    @EnvironmentObject var petController: PetController
+    @EnvironmentObject var reminderController: ReminderController
+    
+    var body: some View {
+        //Saves the event to Supabase and goes back to the page that opened it
+        CustomSaveButton(title: reminderController.isLoading ? "Saving..." : "Save") {
+            Task {
+                await reminderController.saveEvent(petController: petController, router: router)
+            }
+        }
+        .disabled(reminderController.isLoading)
+        .padding(.vertical, 30)
     }
 }
 
 
 #Preview {
-    AddEvent()
+    NavigationStack {
+        AddEvent()
+    }
+    .environmentObject(AppRouter())
+    .environmentObject(PetController())
+    .environmentObject(ReminderController())
 }

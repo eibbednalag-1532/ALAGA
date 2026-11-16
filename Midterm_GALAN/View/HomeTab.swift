@@ -46,14 +46,16 @@ struct HomeTab: View {
 }
 
 struct Greetings: View {
+    @EnvironmentObject var homeController: HomeController
+    @EnvironmentObject var profileController: ProfileController
     var body: some View {
         HStack {
             VStack(alignment: .leading){
-                Text("Good morning.")
+                Text(homeController.greeting)
                     .font(.system(size: 15, weight: .regular))
                     .foregroundStyle(Color.gray)
                 
-                Text("Pet Parent!")
+                Text(homeController.parentName(from: profileController))
                     .font(.system(size: 30, weight: .bold, design: .rounded))
                 
             }
@@ -73,7 +75,7 @@ struct Greetings: View {
 }
 
 struct CalendarView: View {
-    @State private var selectedDateTime = Date()
+    @EnvironmentObject var homeController: HomeController
     var body: some View {
         VStack {
             Text("Calendar")
@@ -81,7 +83,7 @@ struct CalendarView: View {
                 .offset(x: -136)
             
             DatePicker(
-                "Selected Date and Time", selection: $selectedDateTime,
+                "Selected Date and Time", selection: $homeController.selectedDateTime,
                 displayedComponents: [.date, .hourAndMinute]
             )
             .datePickerStyle(.graphical)
@@ -106,11 +108,29 @@ struct ComingReminder: View {
     }
 }
 struct ReminderCards: View {
+    @EnvironmentObject var homeController: HomeController
+    @EnvironmentObject var reminderController: ReminderController
+    @EnvironmentObject var router: AppRouter
     var body: some View {
         VStack {
-            RCardDesign(eventName: "Vaccination - Buddy", dateTime: "May 20, 2024 - 10:00 AM")
-            RCardDesign(eventName: "Check-Up - Blue", dateTime: "June 6, 2024 - 11:00 AM")
-            RCardDesign(eventName: "Grooming - Buddy", dateTime: "June 8, 2024 - 11:30 AM")
+            let reminders = homeController.homeReminders(from: reminderController)
+            
+            if reminders.isEmpty {
+                Text("No upcoming reminders yet")
+                    .font(.system(size: 16, weight: .regular))
+                    .foregroundStyle(Color.gray)
+                    .padding(.vertical, 10)
+            }
+            
+            ForEach(reminders) { reminder in
+                //Tap a card to open the Reminder Tab
+                Button(action: {
+                    router.goToTab(2)
+                }) {
+                    RCardDesign(eventName: "\(reminder.eventType) - \(reminder.petName)", dateTime: reminderController.formattedDate(reminder.eventDate))
+                }
+                .buttonStyle(.plain)
+            }
         }
         
     }
@@ -146,6 +166,7 @@ struct RCardDesign: View {
     }
 }
 struct VetClinics: View {
+    @EnvironmentObject var router: AppRouter
     var body: some View {
         HStack {
             Text("Near Vet Clinics")
@@ -153,7 +174,9 @@ struct VetClinics: View {
                 
             Spacer()
             
-            NavigationLink(destination: ClinicsInfo()) {
+            Button(action: {
+                router.push(.clinics)
+            }) {
                 Text("View All")
                     .font(.system(size: 19, weight: .regular))
                     .foregroundStyle(Color.blue)
@@ -251,5 +274,11 @@ struct ClinicCardDesign: View {
 //}
 
 #Preview {
-    HomeTab()
+    NavigationStack {
+        HomeTab()
+    }
+    .environmentObject(AppRouter())
+    .environmentObject(HomeController())
+    .environmentObject(ReminderController())
+    .environmentObject(ProfileController())
 }

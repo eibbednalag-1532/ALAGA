@@ -10,6 +10,8 @@ import SwiftUI
 struct AddPetTextField: View {
     var title: String
     var example : String
+    //Pass a binding to make the field typeable, leave it out for a read-only field
+    var text: Binding<String>? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -19,8 +21,8 @@ struct AddPetTextField: View {
             
             CustomTextField(
                 placeholder: example,
-                text: .constant(""),
-                isReadOnly: true
+                text: text ?? .constant(""),
+                isReadOnly: text == nil
             )
             .frame(width: 300)
             

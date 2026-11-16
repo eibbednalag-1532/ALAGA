@@ -9,17 +9,22 @@ import SwiftUI
 
 @main
 struct Midterm_GALANApp: App {
-    @State private var currentScreen: String = "signin"
+    @StateObject private var authController = AuthController()
     var body: some Scene {
         WindowGroup {
             Group {
-                if currentScreen == "signin" {
-                    SignIn(currentScreen: $currentScreen)
-                } else if currentScreen == "signup" {
-                    Signup(currentScreen: $currentScreen)
-                } else if currentScreen == "home" {
+                if authController.currentScreen == .signin {
+                    SignIn()
+                } else if authController.currentScreen == .signup {
+                    Signup()
+                } else if authController.currentScreen == .home {
                     MainTabView()
                 }
+            }
+            .animation(.easeInOut, value: authController.currentScreen)
+            .environmentObject(authController)
+            .task {
+                await authController.restoreSession()
             }
             
         }
