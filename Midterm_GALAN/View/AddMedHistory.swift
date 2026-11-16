@@ -60,7 +60,7 @@ struct FillMedHstory: View {
             
             AddPetTextField(title: "Date of Diagnosis", example: "N/A", text: $addPetController.currentIllnessDate)
             
-            AddPetTextField(title: "Medicine Taken", example: "December 5, 2025", text: $addPetController.currentMedicine)
+            AddPetTextField(title: "Medicine Taken", example: "N/A", text: $addPetController.currentMedicine)
             
             AddPetTextField(title: "Post Illness(if applicable)", example: "Allergy", text: $addPetController.pastIllness)
             
