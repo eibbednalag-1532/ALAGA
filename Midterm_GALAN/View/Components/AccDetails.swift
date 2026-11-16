@@ -49,8 +49,5 @@ struct AccDetails: View {
     }
     
 }
-#Preview {
-    AccDetails()
-}
 
 

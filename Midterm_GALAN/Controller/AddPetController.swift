@@ -7,6 +7,7 @@
 
 import Foundation
 import Supabase
+import Combine
 
 // MARK: Add Pet Controller
 //Holds the 3 Add Pet pages (Pet Information > Medical History > Active Medication) and saves them together

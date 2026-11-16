@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 // MARK: Navigation Controller
 //Keeps track of the pages opened inside the Main Tab View so we can go back and forth

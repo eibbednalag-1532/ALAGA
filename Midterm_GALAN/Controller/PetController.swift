@@ -7,6 +7,7 @@
 
 import Foundation
 import Supabase
+import Combine
 
 // MARK: Pet List Controller
 //Loads, adds, edits and deletes the user's pets in Supabase
