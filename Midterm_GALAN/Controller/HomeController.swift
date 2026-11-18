@@ -8,12 +8,12 @@
 import Foundation
 import Combine
 
-// MARK: Home Tab Controller
+
 @MainActor
 final class HomeController: ObservableObject {
     @Published var selectedDateTime = Date()
 
-    //Changes depending on the time of the day
+    
     var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
 

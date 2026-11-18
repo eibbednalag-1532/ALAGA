@@ -44,7 +44,6 @@ struct PetDetails: View {
                     onAddHistory: { controller.beginEditHistory(nil) },
                     onAddGallery: { controller.beginEditGallery(nil) },
                     onDeletePet: {
-                        //Asks first before deleting
                         controller.showDeletePetConfirm = true
                     }
                 )
@@ -70,7 +69,6 @@ struct PetDetails: View {
                 }
             }
 
-            // MARK: Alert Sheets
             if controller.showEditPetInfo {
                 EditPetInfoSheet(
                     isPresented: $controller.showEditPetInfo,
@@ -115,7 +113,6 @@ struct PetDetails: View {
                 }
             }
 
-            //Camera icon > choose where the photo comes from
             if controller.showPhotoOptions {
                 PhotoOptionsSheet(
                     isPresented: $controller.showPhotoOptions,
@@ -124,7 +121,6 @@ struct PetDetails: View {
                 )
             }
 
-            //Move and resize the pet photo inside the circle, then Save
             if let image = controller.cropImage {
                 PhotoCropper(
                     image: image,
@@ -139,7 +135,6 @@ struct PetDetails: View {
         }
         .navigationBarBackButtonHidden(true)
         .errorAlert($controller.errorMessage)
-        // MARK: Photos
         .photosPicker(isPresented: $controller.showPhotoLibrary, selection: $controller.selectedPhotoItem, matching: .images)
         .onChange(of: controller.selectedPhotoItem) {
             Task {
@@ -154,7 +149,6 @@ struct PetDetails: View {
             }
             .ignoresSafeArea()
         }
-        //Loads Medical History, Active Medication and Gallery from Supabase
         .task {
             await controller.loadDetails()
         }
@@ -178,13 +172,17 @@ struct PetDetailsHeader: View {
             HStack {
                 Button(action: onBack) {
                     Image(systemName: "arrow.left")
-                        .font(.system(size: 22))
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(Color.black)
+                        .padding(10)
+                        .background(
+                            Circle()
+                                .fill(Color.white.opacity(0.6))
+                        )
                 }
 
                 Spacer()
 
-                //More options for this pet
                 Menu {
                     Button(action: onAddHistory) {
                         Label("Add Medical History", systemImage: "cross.case")
@@ -207,7 +205,6 @@ struct PetDetailsHeader: View {
             .padding(.horizontal)
 
             ZStack(alignment: .bottomTrailing) {
-                //Pet photo, shows the icon when there is no photo yet
                 Group {
                     if let photoUrl = photoUrl, let url = URL(string: photoUrl) {
                         AsyncImage(url: url) { image in
@@ -264,7 +261,6 @@ struct PetDetailsHeader: View {
     }
 }
 
-// MARK: Overview
 struct PetOverview: View {
     @ObservedObject var controller: PetDetailsController
     let onEditPetInfo: () -> Void
@@ -287,7 +283,6 @@ struct PetOverview: View {
     }
 }
 
-// MARK: Medical History
 struct PetMedicalHistory: View {
     @ObservedObject var controller: PetDetailsController
 
@@ -308,7 +303,6 @@ struct PetMedicalHistory: View {
     }
 }
 
-// MARK: Gallery
 struct PetGallery: View {
     @ObservedObject var controller: PetDetailsController
 
@@ -343,7 +337,6 @@ struct EmptyDetailsText: View {
     }
 }
 
-// MARK: Cards
 struct DetailsCard: View {
     let title: String
     let rows: [(String, String)]
@@ -408,7 +401,6 @@ struct GalleryCard: View {
             }
 
             HStack(alignment: .top, spacing: 12) {
-                //Gallery photo, gray box when there is no photo yet
                 RoundedRectangle(cornerRadius: 5)
                     .fill(Color.gray.opacity(0.3))
                     .overlay {

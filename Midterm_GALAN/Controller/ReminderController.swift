@@ -9,18 +9,21 @@ import Foundation
 import Supabase
 import Combine
 
-// MARK: Reminder / Add Event Controller
 @MainActor
 final class ReminderController: ObservableObject {
     @Published var reminders: [Reminder] = []
     @Published var selectedTab: Int = 0
 
-    //Add Event fields
+   
     @Published var eventType: String = ""
     @Published var petName: String = ""
     @Published var eventDate = Date()
 
-    //Edit Reminder alert sheet fields
+   
+    @Published var showDeleteReminder = false
+    @Published var reminderToDelete: Reminder? = nil
+
+    
     @Published var showEditReminder = false
     @Published var editingReminder: Reminder? = nil
     @Published var editEventType: String = ""
@@ -29,7 +32,7 @@ final class ReminderController: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String? = nil
 
-    // MARK: Lists
+    
     var upcomingReminders: [Reminder] {
         reminders
             .filter { $0.eventDate >= Date() }
@@ -42,7 +45,7 @@ final class ReminderController: ObservableObject {
             .sorted { $0.eventDate > $1.eventDate }
     }
 
-    //Reminders on the day picked in the Home Tab calendar
+   
     func remindersOn(_ date: Date) -> [Reminder] {
         reminders
             .filter { Calendar.current.isDate($0.eventDate, inSameDayAs: date) }
@@ -58,12 +61,12 @@ final class ReminderController: ObservableObject {
                 .execute()
                 .value
         } catch {
-            errorMessage = error.localizedDescription
+            print("Could not load reminders: \(error.localizedDescription)")
         }
     }
 
     // MARK: Add Event
-    //Called by the "Add Event" button in the Choose Action sheet
+
     func startNewEvent(router: AppRouter) {
         eventType = ""
         petName = ""
@@ -84,7 +87,6 @@ final class ReminderController: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        //Links the event to the pet if the name matches one of the user's pets
         let matchedPet = petController.pets.first { $0.name.lowercased() == cleanPet.lowercased() }
 
         let reminder = Reminder(
@@ -96,14 +98,12 @@ final class ReminderController: ObservableObject {
 
         do {
             try await addReminder(reminder)
-            //Back to the page that opened Add Event
             router.pop()
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    //Saves one reminder to Supabase, also used by the Add Pet pages
     func addReminder(_ reminder: Reminder) async throws {
         let savedReminder: Reminder = try await supabase
             .from("reminders")
@@ -116,7 +116,18 @@ final class ReminderController: ObservableObject {
         reminders.append(savedReminder)
     }
 
-    // MARK: Edit Reminder (pencil on a reminder card)
+    func askDeleteReminder(_ reminder: Reminder) {
+        reminderToDelete = reminder
+        showDeleteReminder = true
+    }
+
+    func deleteChosenReminder() async {
+        if let reminder = reminderToDelete {
+            await deleteReminder(reminder)
+        }
+        reminderToDelete = nil
+    }
+
     func beginEditReminder(_ reminder: Reminder) {
         editingReminder = reminder
         editEventType = reminder.eventType
@@ -150,14 +161,6 @@ final class ReminderController: ObservableObject {
         editingReminder = nil
     }
 
-    //Called after the delete is confirmed, the Home Tab updates too
-    func deleteEditedReminder() async {
-        if let reminder = editingReminder {
-            await deleteReminder(reminder)
-        }
-        editingReminder = nil
-    }
-
     func deleteReminder(_ reminder: Reminder) async {
         guard let id = reminder.id else { return }
 
@@ -174,7 +177,6 @@ final class ReminderController: ObservableObject {
         }
     }
 
-    // MARK: Display Helpers
     func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM d, yyyy - h:mm a"

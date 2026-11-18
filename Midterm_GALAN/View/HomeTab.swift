@@ -24,7 +24,6 @@ struct HomeTab: View {
                     .padding(.horizontal)
                     .padding(.top, 10)
                 
-                //Its a fixed-sixed vertical Spacer, forces a 15 point gap between greetings nad the spacer
                 Color.clear.frame(height: 15)
                 Spacer()
                 
@@ -91,7 +90,6 @@ struct CalendarView: View {
                 .datePickerStyle(.graphical)
                 .tint(Color.blue)
                 
-                //Events on the day picked in the calendar
                 CalendarEvents()
             }
             .padding()
@@ -167,7 +165,6 @@ struct ReminderCards: View {
             }
             
             ForEach(reminders) { reminder in
-                //Tap a card to open the Reminder Tab
                 Button(action: {
                     router.goToTab(2)
                 }) {
@@ -309,13 +306,6 @@ struct ClinicCardDesign: View {
         .cornerRadius(16)
     }
 }
-
-//MARK: Undone button
-//struct Button: View {
-//    var body: some View {
-//        
-//    }
-//}
 
 #Preview {
     NavigationStack {

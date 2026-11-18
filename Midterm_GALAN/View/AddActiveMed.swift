@@ -75,7 +75,6 @@ struct ActiveMedSaveButton: View {
     @EnvironmentObject var addPetController: AddPetController
 
     var body: some View {
-        //Goes to Add Event, the back button brings you back here
         CustomSaveButton(title: "Save") {
             addPetController.goToAddEvent(reminderController: reminderController, router: router)
         }

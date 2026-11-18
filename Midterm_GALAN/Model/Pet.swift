@@ -7,8 +7,6 @@
 
 import Foundation
 
-// MARK: Pet Model
-//One row of the "pets" table in Supabase
 nonisolated struct Pet: Codable, Identifiable, Hashable {
     var id: UUID? = nil
     var userId: UUID? = nil

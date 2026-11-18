@@ -7,7 +7,6 @@
 
 import Foundation
 
-// MARK: Screens before signing in
 nonisolated enum AppScreen {
     case signin
     case signup

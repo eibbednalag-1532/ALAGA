@@ -7,8 +7,6 @@
 
 import Foundation
 
-// MARK: Gallery Entry Model
-//One row of the "gallery_entries" table in Supabase
 nonisolated struct GalleryEntry: Codable, Identifiable, Hashable {
     var id: UUID? = nil
     var userId: UUID? = nil

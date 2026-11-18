@@ -8,8 +8,6 @@
 import SwiftUI
 import UIKit
 
-// MARK: Camera
-//Opens the iPhone camera, used by the "Take Photo" buttons
 struct CameraPicker: UIViewControllerRepresentable {
     var onImagePicked: (UIImage) -> Void
     @Environment(\.dismiss) private var dismiss

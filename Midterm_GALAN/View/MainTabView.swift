@@ -13,6 +13,7 @@ struct MainTabView: View {
     @StateObject private var addPetController = AddPetController()
     @StateObject private var reminderController = ReminderController()
     @StateObject private var profileController = ProfileController()
+    @StateObject private var documentationController = DocumentationController()
     
     var body: some View {
         
@@ -45,7 +46,6 @@ struct MainTabView: View {
             }
             .tint(Color.green)
             .navigationBarBackButtonHidden(true)
-            // MARK: Every page that can be opened from the tabs
             .navigationDestination(for: AppRoute.self) { route in
                 switch route {
                 case .petDetails(let pet):
@@ -75,7 +75,7 @@ struct MainTabView: View {
         .environmentObject(addPetController)
         .environmentObject(reminderController)
         .environmentObject(profileController)
-        //Loads the user's data from Supabase when the tabs open
+        .environmentObject(documentationController)
         .task {
             await petController.fetchPets()
             await reminderController.fetchReminders()

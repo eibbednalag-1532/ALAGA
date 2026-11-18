@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct AddMedHistory: View {
+    @EnvironmentObject var addPetController: AddPetController
     var body: some View {
         ZStack(alignment: .topLeading) {
             AngularGradient(
@@ -30,6 +31,7 @@ struct AddMedHistory: View {
             
             
         }
+        .errorAlert($addPetController.errorMessage)
     }
 }
 struct MedHistoryGreetings: View {
@@ -81,10 +83,16 @@ struct MedHistorySaveButton: View {
     @EnvironmentObject var addPetController: AddPetController
     
     var body: some View {
-        //Goes to Active Medication, the back button brings you back here
-        CustomSaveButton(title: "Save") {
-            addPetController.goToActiveMed(router: router)
+        CustomSaveButton(title: addPetController.isLoading ? "Saving..." : "Save") {
+            if addPetController.historyPet != nil {
+                Task {
+                    await addPetController.saveMedHistory(router: router)
+                }
+            } else {
+                addPetController.goToActiveMed(router: router)
+            }
         }
+        .disabled(addPetController.isLoading)
         .padding(.vertical, 70)
         .padding(.trailing, -10)
     }

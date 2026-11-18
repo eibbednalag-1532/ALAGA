@@ -20,7 +20,6 @@ struct GoogleSignIn: View {
             )
             .ignoresSafeArea()
             VStack {
-                //Goes back to the Sign In page
                 AuthBackButton {
                     authController.goToSignIn()
                 }
@@ -44,7 +43,6 @@ struct GoogleSignIn: View {
     }
 }
 
-// MARK: Small paw + "Alaga" logo used on the Google Sign In and Enter OTP cards
 struct SmallLogo: View {
     var body: some View {
         HStack(alignment: .top, spacing: 4) {
@@ -138,7 +136,6 @@ struct GoogleSignInFooter: View {
 
             Spacer()
 
-            //Sends the code to the email then opens the Enter OTP page
             AuthBlueButton(title: authController.isLoading ? "Sending..." : "Next") {
                 Task {
                     await authController.sendOTP()
@@ -149,7 +146,6 @@ struct GoogleSignInFooter: View {
     }
 }
 
-// MARK: Blue pill button (Next / Verify)
 struct AuthBlueButton: View {
     let title: String
     let action: () -> Void
@@ -169,7 +165,6 @@ struct AuthBlueButton: View {
     }
 }
 
-// MARK: Back arrow at the top left
 struct AuthBackButton: View {
     let action: () -> Void
 
@@ -186,8 +181,6 @@ struct AuthBackButton: View {
     }
 }
 
-// MARK: Rounded see-through card
-//Use it like .authCard()
 extension View {
     func authCard() -> some View {
         self

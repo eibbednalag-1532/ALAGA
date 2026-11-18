@@ -14,11 +14,11 @@ import Combine
 final class AuthController: ObservableObject {
     @Published var currentScreen: AppScreen = .signin
 
-    //Sign in fields
+    //MARK: Sign in fields
     @Published var loginEmail: String = ""
     @Published var loginPassword: String = ""
 
-    //Sign up fields
+    //MARK: Sign up fields
     @Published var firstName: String = ""
     @Published var lastName: String = ""
     @Published var email: String = ""
@@ -26,15 +26,16 @@ final class AuthController: ObservableObject {
     @Published var password: String = ""
     @Published var confirmPassword: String = ""
 
-    //Google sign in fields (email + 6-digit code)
+    //MARK: Google sign in fields
     @Published var otpEmail: String = ""
     @Published var otpCode: String = ""
+    @Published var otpType: EmailOTPType = .email
+    @Published var otpBackScreen: AppScreen = .googleSignIn
 
     @Published var isLoading = false
     @Published var errorMessage: String? = nil
     @Published var infoMessage: String? = nil
 
-    // MARK: Navigation
     func goToSignUp() {
         clearMessages()
         currentScreen = .signup
@@ -51,7 +52,20 @@ final class AuthController: ObservableObject {
         currentScreen = .googleSignIn
     }
 
-    // MARK: Keeps the user logged in when the app opens again
+    func goBackFromOTP() {
+        clearMessages()
+        otpCode = ""
+        currentScreen = otpBackScreen
+    }
+
+    private func openOTP(email: String, type: EmailOTPType, backScreen: AppScreen) {
+        otpEmail = email
+        otpCode = ""
+        otpType = type
+        otpBackScreen = backScreen
+        currentScreen = .otp
+    }
+
     func restoreSession() async {
         guard SupabaseConfig.isConfigured else { return }
 
@@ -79,8 +93,11 @@ final class AuthController: ObservableObject {
 
         do {
             _ = try await supabase.auth.signIn(email: cleanEmail, password: loginPassword)
+
+            try? await supabase.auth.signOut()
+            try await supabase.auth.signInWithOTP(email: cleanEmail, shouldCreateUser: false)
             loginPassword = ""
-            currentScreen = .home
+            openOTP(email: cleanEmail, type: .email, backScreen: .signin)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -126,16 +143,19 @@ final class AuthController: ObservableObject {
                 ]
             )
 
-            if response.session != nil {
-                //Email confirmation is off, go straight to the app
+            if response.user.identities?.isEmpty ?? false {
+                try await supabase.auth.signInWithOTP(email: cleanEmail, shouldCreateUser: false)
                 clearSignUpFields()
-                currentScreen = .home
+                openOTP(email: cleanEmail, type: .email, backScreen: .signup)
+                infoMessage = "This email already has an account. We sent a code to sign you in."
+            } else if response.session != nil {
+                try? await supabase.auth.signOut()
+                try await supabase.auth.signInWithOTP(email: cleanEmail, shouldCreateUser: false)
+                clearSignUpFields()
+                openOTP(email: cleanEmail, type: .email, backScreen: .signup)
             } else {
-                //Email confirmation is on, the user has to confirm first
-                loginEmail = cleanEmail
                 clearSignUpFields()
-                currentScreen = .signin
-                infoMessage = "Account created! Check your email to confirm it, then sign in."
+                openOTP(email: cleanEmail, type: .signup, backScreen: .signup)
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -143,7 +163,7 @@ final class AuthController: ObservableObject {
     }
 
     // MARK: Send OTP
-    //Sends a 6-digit code to the email, then opens the Enter OTP page
+    
     func sendOTP() async {
         clearMessages()
         let cleanEmail = otpEmail.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -166,22 +186,25 @@ final class AuthController: ObservableObject {
 
         do {
             try await supabase.auth.signInWithOTP(email: cleanEmail)
-            otpEmail = cleanEmail
-            otpCode = ""
-            currentScreen = .otp
+            openOTP(email: cleanEmail, type: .email, backScreen: .googleSignIn)
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
     // MARK: Resend OTP
+    
     func resendOTP() async {
         clearMessages()
         isLoading = true
         defer { isLoading = false }
 
         do {
-            try await supabase.auth.signInWithOTP(email: otpEmail)
+            if otpType == .signup {
+                try await supabase.auth.resend(email: otpEmail, type: .signup)
+            } else {
+                try await supabase.auth.signInWithOTP(email: otpEmail, shouldCreateUser: false)
+            }
             otpCode = ""
             infoMessage = "A new code was sent to \(otpEmail)."
         } catch {
@@ -190,7 +213,7 @@ final class AuthController: ObservableObject {
     }
 
     // MARK: Verify OTP
-    //Checks the 6-digit code, then opens the app
+  
     func verifyOTP() async {
         clearMessages()
 
@@ -203,7 +226,7 @@ final class AuthController: ObservableObject {
         defer { isLoading = false }
 
         do {
-            _ = try await supabase.auth.verifyOTP(email: otpEmail, token: otpCode, type: .email)
+            _ = try await supabase.auth.verifyOTP(email: otpEmail, token: otpCode, type: otpType)
             otpCode = ""
             currentScreen = .home
         } catch {
@@ -212,6 +235,7 @@ final class AuthController: ObservableObject {
     }
 
     // MARK: Log Out
+    
     func signOut() async {
         try? await supabase.auth.signOut()
         loginEmail = ""
@@ -222,7 +246,6 @@ final class AuthController: ObservableObject {
         currentScreen = .signin
     }
 
-    // MARK: Helpers
     func clearMessages() {
         errorMessage = nil
         infoMessage = nil

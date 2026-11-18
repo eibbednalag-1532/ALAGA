@@ -15,7 +15,6 @@ struct PetsCard: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            //Pet photo, shows the icon when there is no photo yet
             Group {
                 if let photoUrl = photoUrl, let url = URL(string: photoUrl) {
                     AsyncImage(url: url) { image in

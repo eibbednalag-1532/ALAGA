@@ -27,7 +27,6 @@ struct Profile: View {
                 EmailAcc(value: profileController.displayEmail)
                 ContactNumber(value: profileController.displayContactNumber)
                 
-                //Opens the Account page to edit the profile
                 CustomSaveButton(title: "Edit Profile") {
                     profileController.startEditing(router: router)
                 }

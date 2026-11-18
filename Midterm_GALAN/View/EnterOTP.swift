@@ -20,9 +20,8 @@ struct EnterOTP: View {
             )
             .ignoresSafeArea()
             VStack {
-                //Goes back to the Google Sign In page to change the email
                 AuthBackButton {
-                    authController.goToGoogleSignIn()
+                    authController.goBackFromOTP()
                 }
 
                 Spacer()
@@ -61,8 +60,6 @@ struct OTPHeader: View {
     }
 }
 
-// MARK: 6 code boxes
-//One hidden text field holds the code, the boxes just show each number
 struct OTPBoxes: View {
     @EnvironmentObject var authController: AuthController
     @FocusState private var isTyping: Bool
@@ -98,7 +95,6 @@ struct OTPBoxes: View {
             }
         }
         .padding(.bottom, 20)
-        //Numbers only, 6 digits max
         .onChange(of: authController.otpCode) {
             let cleanCode = String(authController.otpCode.filter { $0.isNumber }.prefix(6))
             if cleanCode != authController.otpCode {
@@ -136,7 +132,6 @@ struct OTPFooter: View {
             .disabled(authController.isLoading)
             .padding(.bottom, 8)
 
-            //Shows "A new code was sent to ..." after resending
             if let info = authController.infoMessage {
                 Text(info)
                     .font(.system(size: 13, weight: .regular))
@@ -146,7 +141,6 @@ struct OTPFooter: View {
             HStack {
                 Spacer()
 
-                //Checks the code then opens the app
                 AuthBlueButton(title: authController.isLoading ? "Verifying..." : "Verify") {
                     Task {
                         await authController.verifyOTP()

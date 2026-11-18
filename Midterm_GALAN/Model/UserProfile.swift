@@ -7,8 +7,6 @@
 
 import Foundation
 
-// MARK: User Profile Model
-//One row of the "profiles" table in Supabase, made automatically when a user signs up
 nonisolated struct UserProfile: Codable, Identifiable, Hashable {
     var id: UUID
     var username: String? = nil

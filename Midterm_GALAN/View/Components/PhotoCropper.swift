@@ -8,10 +8,9 @@
 import SwiftUI
 import UIKit
 
-// MARK: Photo Cropper
-//Shows the picked or taken photo inside a circle, drag to move it and pinch to resize it, then Save
 struct PhotoCropper: View {
     let image: UIImage
+    var isSquare: Bool = false
     var onCancel: () -> Void = {}
     var onSave: (UIImage) -> Void = { _ in }
 
@@ -33,14 +32,13 @@ struct PhotoCropper: View {
                     .foregroundStyle(Color.white)
 
                 CroppedPhoto(image: image, size: circleSize, scale: scale, offset: offset)
-                    .clipShape(Circle())
+                    .clipShape(isSquare ? AnyShape(RoundedRectangle(cornerRadius: 10)) : AnyShape(Circle()))
                     .overlay(
-                        Circle()
+                        (isSquare ? AnyShape(RoundedRectangle(cornerRadius: 10)) : AnyShape(Circle()))
                             .stroke(Color.white, lineWidth: 2)
                     )
-                    .contentShape(Circle())
+                    .contentShape(Rectangle())
                     .gesture(
-                        //Drag to move
                         DragGesture()
                             .onChanged { value in
                                 offset = CGSize(
@@ -51,7 +49,6 @@ struct PhotoCropper: View {
                             .onEnded { _ in
                                 lastOffset = offset
                             }
-                            //Pinch to resize
                             .simultaneously(with:
                                 MagnifyGesture()
                                     .onChanged { value in
@@ -80,8 +77,6 @@ struct PhotoCropper: View {
             }
         }
     }
-
-    //Turns what is inside the circle into the photo that gets uploaded
     private func saveCroppedPhoto() {
         let renderer = ImageRenderer(content: CroppedPhoto(image: image, size: circleSize, scale: scale, offset: offset))
         renderer.scale = 3
@@ -94,7 +89,6 @@ struct PhotoCropper: View {
     }
 }
 
-// MARK: Photo inside the square that holds the circle
 struct CroppedPhoto: View {
     let image: UIImage
     let size: CGFloat

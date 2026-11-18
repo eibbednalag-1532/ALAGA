@@ -9,7 +9,6 @@ import SwiftUI
 
 struct AccDetails: View {
     let detsName: String
-    //Pass a binding to type inside the white box
     var text: Binding<String>? = nil
     var isReadOnly: Bool = false
     

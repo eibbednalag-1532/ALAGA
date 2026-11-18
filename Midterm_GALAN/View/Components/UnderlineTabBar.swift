@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-//Reusable top tabs with a line under them (Upcoming / Past, Overview / Medical History / Gallery)
 struct UnderlineTabBar: View {
     let tabs: [String]
     @Binding var selectedTab: Int

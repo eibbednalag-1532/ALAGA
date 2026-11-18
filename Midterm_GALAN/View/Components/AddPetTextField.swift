@@ -10,7 +10,6 @@ import SwiftUI
 struct AddPetTextField: View {
     var title: String
     var example : String
-    //Pass a binding to make the field typeable, leave it out for a read-only field
     var text: Binding<String>? = nil
     
     var body: some View {

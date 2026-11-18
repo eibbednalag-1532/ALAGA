@@ -12,14 +12,13 @@ import PhotosUI
 import SwiftUI
 import UIKit
 
-//Which photo the camera / photo library is picking for
 enum PhotoTarget {
     case pet
     case gallery
 }
 
 // MARK: Pet Details Controller
-//Loads and edits one pet's Overview, Medical History and Gallery
+
 @MainActor
 final class PetDetailsController: ObservableObject {
     @Published var pet: Pet
@@ -36,10 +35,9 @@ final class PetDetailsController: ObservableObject {
     @Published var showEditActiveMed = false
     @Published var showEditMedHistory = false
     @Published var showEditGallery = false
-    //Confirm Delete for the "Delete Pet" button in the ... menu
     @Published var showDeletePetConfirm = false
 
-    //Edit Pet Information fields
+    //MARK: Edit Pet Information fields
     @Published var editName: String = ""
     @Published var editBreed: String = ""
     @Published var editAge: String = ""
@@ -47,20 +45,23 @@ final class PetDetailsController: ObservableObject {
     @Published var editGender: String = ""
     @Published var editWeight: String = ""
 
-    //Edit Active Medication fields
+    //MARK: Edit Active Medication fields
     @Published var medDiagnosis: String = ""
     @Published var medMedicine: String = ""
     @Published var medIntakeFrequency: String = ""
     @Published var medIntakeDuration: String = ""
 
-    //Edit Medical History fields (editingHistory is nil when adding a new one)
+    //MARK: Edit Medical History fields
     @Published var editingHistory: MedicalHistory? = nil
-    @Published var historyDate: String = ""
-    @Published var historyDiagnosis: String = ""
-    @Published var historyActivity: String = ""
     @Published var historyWeight: String = ""
+    @Published var historyCurrentIllness: String = ""
+    @Published var historyCurrentDate: String = ""
+    @Published var historyCurrentMedicine: String = ""
+    @Published var historyPastIllness: String = ""
+    @Published var historyPastDate: String = ""
+    @Published var historyPastMedicine: String = ""
 
-    //Edit Gallery fields (editingGallery is nil when adding a new one)
+    //MARK: Edit Gallery fields
     @Published var editingGallery: GalleryEntry? = nil
     @Published var galleryDate: String = ""
     @Published var galleryNote: String = ""
@@ -73,16 +74,13 @@ final class PetDetailsController: ObservableObject {
     @Published var showCamera = false
     @Published var selectedPhotoItem: PhotosPickerItem? = nil
     @Published var isUploading = false
-    //Photo picked in the Gallery sheet, uploaded when Save is pressed
     @Published var galleryImageData: Data? = nil
-    //Pet photo waiting to be moved and resized (the Photo Cropper shows while this is not nil)
     @Published var cropImage: UIImage? = nil
 
     init(pet: Pet) {
         self.pet = pet
     }
 
-    // MARK: Display Helpers
     func display(_ text: String) -> String {
         text.isEmpty ? "N/A" : text
     }
@@ -109,14 +107,16 @@ final class PetDetailsController: ObservableObject {
 
     func historyRows(_ record: MedicalHistory) -> [(String, String)] {
         [
-            ("Diagnosis", display(record.diagnosis)),
-            ("Activity", display(record.activity)),
-            ("Age", display(record.age)),
-            ("Weight", record.weight.isEmpty ? "N/A" : "\(record.weight) Kg")
+            ("Weight", record.weight.isEmpty ? "N/A" : "\(record.weight) Kg"),
+            ("Current Illness", display(record.currentIllness)),
+            ("Date of Diagnosis", display(record.currentIllnessDate)),
+            ("Medicine Taken", display(record.currentMedicine)),
+            ("Post Illness", display(record.pastIllness)),
+            ("Date of Diagnosis", display(record.pastIllnessDate)),
+            ("Medicine Taken", display(record.pastMedicine))
         ]
     }
 
-    // MARK: Load from Supabase
     func loadDetails() async {
         guard let petId = pet.id?.uuidString else { return }
 
@@ -181,7 +181,6 @@ final class PetDetailsController: ObservableObject {
 
     func deletePet(petController: PetController, router: AppRouter) async {
         if await petController.deletePet(pet) {
-            //Back to the Pets Tab
             router.goToTab(1)
         } else {
             errorMessage = petController.errorMessage
@@ -245,13 +244,16 @@ final class PetDetailsController: ObservableObject {
     }
 
     // MARK: Medical History
-    //Pass nil to add a new record
+    
     func beginEditHistory(_ record: MedicalHistory?) {
         editingHistory = record
-        historyDate = record?.recordDate ?? ""
-        historyDiagnosis = record?.diagnosis ?? ""
-        historyActivity = record?.activity ?? ""
         historyWeight = record?.weight ?? pet.weight
+        historyCurrentIllness = record?.currentIllness ?? ""
+        historyCurrentDate = record?.currentIllnessDate ?? ""
+        historyCurrentMedicine = record?.currentMedicine ?? ""
+        historyPastIllness = record?.pastIllness ?? ""
+        historyPastDate = record?.pastIllnessDate ?? ""
+        historyPastMedicine = record?.pastMedicine ?? ""
         selectedTab = 1
         showEditMedHistory = true
     }
@@ -259,11 +261,16 @@ final class PetDetailsController: ObservableObject {
     func saveHistory() async {
         guard let petId = pet.id else { return }
 
-        var record = editingHistory ?? MedicalHistory(petId: petId, recordDate: "", diagnosis: "", activity: "", age: pet.age, weight: "", medicine: "")
-        record.recordDate = historyDate
-        record.diagnosis = historyDiagnosis
-        record.activity = historyActivity
+        var record = editingHistory ?? MedicalHistory(petId: petId, recordDate: Date().formatted(date: .long, time: .omitted), diagnosis: "", activity: "", age: pet.age, weight: "", medicine: "")
         record.weight = historyWeight
+        record.currentIllness = historyCurrentIllness
+        record.currentIllnessDate = historyCurrentDate
+        record.currentMedicine = historyCurrentMedicine
+        record.pastIllness = historyPastIllness
+        record.pastIllnessDate = historyPastDate
+        record.pastMedicine = historyPastMedicine
+        record.diagnosis = historyCurrentIllness
+        record.medicine = historyCurrentMedicine
 
         do {
             if let id = record.id {
@@ -309,7 +316,7 @@ final class PetDetailsController: ObservableObject {
     }
 
     // MARK: Gallery
-    //Pass nil to add a new entry
+
     func beginEditGallery(_ entry: GalleryEntry?) {
         editingGallery = entry
         galleryDate = entry?.entryDate ?? ""
@@ -329,7 +336,6 @@ final class PetDetailsController: ObservableObject {
         entry.activity = galleryActivity
 
         do {
-            //Uploads the picked photo first so the entry can keep its link
             if let imageData = galleryImageData {
                 isUploading = true
                 defer { isUploading = false }
@@ -380,13 +386,12 @@ final class PetDetailsController: ObservableObject {
     }
 
     // MARK: Photos
-    //Camera icon on the pet photo
+    
     func beginChangePetPhoto() {
         photoTarget = .pet
         showPhotoOptions = true
     }
-
-    //"Take Photo" buttons
+   
     func takePhoto(for target: PhotoTarget) {
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
             errorMessage = "The camera is not available on this device. Try Photos instead."
@@ -396,20 +401,17 @@ final class PetDetailsController: ObservableObject {
         showCamera = true
     }
 
-    //"Photos" buttons
     func choosePhoto(for target: PhotoTarget) {
         photoTarget = target
         showPhotoLibrary = true
     }
 
-    //Called after a photo is picked from the photo library
     func handlePickedItem(petController: PetController) async {
         guard let item = selectedPhotoItem else { return }
         selectedPhotoItem = nil
 
         do {
             if let data = try await item.loadTransferable(type: Data.self) {
-                //Pet photo: opens the Photo Cropper first so it can be moved and resized
                 if photoTarget == .pet, let image = UIImage(data: data) {
                     cropImage = image
                     return
@@ -423,9 +425,7 @@ final class PetDetailsController: ObservableObject {
         }
     }
 
-    //Called after a photo is taken with the camera
     func handleCameraImage(_ image: UIImage, petController: PetController) async {
-        //Pet photo: opens the Photo Cropper first so it can be moved and resized
         if photoTarget == .pet {
             cropImage = image
             return
@@ -435,7 +435,6 @@ final class PetDetailsController: ObservableObject {
         await usePhoto(imageData, petController: petController)
     }
 
-    //Called by Save in the Photo Cropper, uploads the moved and resized photo
     func savePetPhoto(_ image: UIImage, petController: PetController) async {
         cropImage = nil
         guard let imageData = image.jpegData(compressionQuality: 0.7) else { return }
@@ -444,7 +443,7 @@ final class PetDetailsController: ObservableObject {
 
     private func usePhoto(_ imageData: Data, petController: PetController) async {
         if photoTarget == .gallery {
-            //Kept until Save is pressed in the Gallery sheet
+            
             galleryImageData = imageData
             return
         }

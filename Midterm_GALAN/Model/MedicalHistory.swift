@@ -7,8 +7,6 @@
 
 import Foundation
 
-// MARK: Medical History Model
-//One row of the "medical_histories" table in Supabase
 nonisolated struct MedicalHistory: Codable, Identifiable, Hashable {
     var id: UUID? = nil
     var userId: UUID? = nil
@@ -19,6 +17,13 @@ nonisolated struct MedicalHistory: Codable, Identifiable, Hashable {
     var age: String
     var weight: String
     var medicine: String
+    //Same parts as the Medical History page when adding a pet
+    var currentIllness: String = ""
+    var currentIllnessDate: String = ""
+    var currentMedicine: String = ""
+    var pastIllness: String = ""
+    var pastIllnessDate: String = ""
+    var pastMedicine: String = ""
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -30,5 +35,11 @@ nonisolated struct MedicalHistory: Codable, Identifiable, Hashable {
         case age
         case weight
         case medicine
+        case currentIllness = "current_illness"
+        case currentIllnessDate = "current_illness_date"
+        case currentMedicine = "current_medicine"
+        case pastIllness = "past_illness"
+        case pastIllnessDate = "past_illness_date"
+        case pastMedicine = "past_medicine"
     }
 }

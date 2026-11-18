@@ -7,8 +7,6 @@
 
 import Foundation
 
-// MARK: Active Medication Model
-//One row of the "active_medications" table in Supabase
 nonisolated struct ActiveMedication: Codable, Identifiable, Hashable {
     var id: UUID? = nil
     var userId: UUID? = nil

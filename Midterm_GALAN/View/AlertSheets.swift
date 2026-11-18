@@ -6,9 +6,8 @@
 //
 
 import SwiftUI
+import PhotosUI
 
-// MARK: Reusable Alert Sheet Container
-//Gray card that floats on top of the screen, every alert sheet uses this
 struct CustomAlertContainer<Content: View>: View {
     @Binding var isPresented: Bool
     let title: String
@@ -17,7 +16,6 @@ struct CustomAlertContainer<Content: View>: View {
 
     var body: some View {
         ZStack {
-            //Dims the screen behind the alert sheet, tap outside to close
             Color.black.opacity(0.15)
                 .ignoresSafeArea()
                 .onTapGesture {
@@ -41,7 +39,6 @@ struct CustomAlertContainer<Content: View>: View {
                         .frame(maxWidth: .infinity, alignment: showsBackButton ? .center : .leading)
 
                     if showsBackButton {
-                        //Keeps the title in the center
                         Color.clear.frame(width: 18, height: 18)
                     }
                 }
@@ -57,7 +54,6 @@ struct CustomAlertContainer<Content: View>: View {
     }
 }
 
-// MARK: Alert Sheet Parts
 struct SheetFieldItem {
     let placeholder: String
     let text: Binding<String>
@@ -106,7 +102,6 @@ struct SheetButton: View {
     }
 }
 
-// MARK: Reusable Edit Sheet (fields + Save / Delete)
 struct CustomEditSheet: View {
     @Binding var isPresented: Bool
     let title: String
@@ -117,8 +112,8 @@ struct CustomEditSheet: View {
     var onChoosePhoto: () -> Void = {}
     var onSave: () -> Void = {}
     var onDelete: () -> Void = {}
+    var showsDeleteButton: Bool = true
 
-    //Shows the Confirm Delete alert sheet before deleting
     @State private var showConfirmDelete = false
 
     var body: some View {
@@ -141,7 +136,6 @@ struct CustomEditSheet: View {
                         }
                         .padding(.top, 4)
 
-                        //Shows after a photo is picked, it uploads when Save is pressed
                         if photoAdded {
                             Text("Photo added, press Save to upload it")
                                 .font(.system(size: 12, weight: .regular))
@@ -155,9 +149,10 @@ struct CustomEditSheet: View {
                             isPresented = false
                         }
 
-                        //Asks first before deleting
-                        SheetButton(title: "Delete", backgroundColor: .red) {
-                            showConfirmDelete = true
+                        if showsDeleteButton {
+                            SheetButton(title: "Delete", backgroundColor: .red) {
+                                showConfirmDelete = true
+                            }
                         }
                     }
                     .padding(.top, 4)
@@ -174,8 +169,6 @@ struct CustomEditSheet: View {
     }
 }
 
-// MARK: Confirm Delete
-//Pops up after Delete is pressed, nothing is deleted until Delete is pressed here
 struct ConfirmDeleteSheet: View {
     @Binding var isPresented: Bool
     var message: String = "This will be permanently deleted. Do you want to continue?"
@@ -206,6 +199,7 @@ struct ConfirmDeleteSheet: View {
 }
 
 // MARK: Edit Pet Information
+
 struct EditPetInfoSheet: View {
     @Binding var isPresented: Bool
     @ObservedObject var controller: PetDetailsController
@@ -231,6 +225,7 @@ struct EditPetInfoSheet: View {
 }
 
 // MARK: Edit Medical History
+
 struct EditMedHistorySheet: View {
     @Binding var isPresented: Bool
     @ObservedObject var controller: PetDetailsController
@@ -242,10 +237,13 @@ struct EditMedHistorySheet: View {
             isPresented: $isPresented,
             title: "Medical History",
             fields: [
-                SheetFieldItem(placeholder: "May 15, 2023", text: $controller.historyDate),
-                SheetFieldItem(placeholder: "Dwarfism", text: $controller.historyDiagnosis),
-                SheetFieldItem(placeholder: "Swimming", text: $controller.historyActivity),
-                SheetFieldItem(placeholder: "1.5", text: $controller.historyWeight, unit: "Kg")
+                SheetFieldItem(placeholder: "Weight", text: $controller.historyWeight, unit: "Kg"),
+                SheetFieldItem(placeholder: "Current Illness", text: $controller.historyCurrentIllness),
+                SheetFieldItem(placeholder: "Date of Diagnosis", text: $controller.historyCurrentDate),
+                SheetFieldItem(placeholder: "Medicine Taken", text: $controller.historyCurrentMedicine),
+                SheetFieldItem(placeholder: "Post Illness", text: $controller.historyPastIllness),
+                SheetFieldItem(placeholder: "Date of Diagnosis", text: $controller.historyPastDate),
+                SheetFieldItem(placeholder: "Medicine Taken", text: $controller.historyPastMedicine)
             ],
             onSave: onSave,
             onDelete: onDelete
@@ -254,6 +252,7 @@ struct EditMedHistorySheet: View {
 }
 
 // MARK: Edit Gallery Details
+
 struct EditGallerySheet: View {
     @Binding var isPresented: Bool
     @ObservedObject var controller: PetDetailsController
@@ -280,6 +279,7 @@ struct EditGallerySheet: View {
 }
 
 // MARK: Edit Active Medication
+
 struct EditActiveMedSheet: View {
     @Binding var isPresented: Bool
     @ObservedObject var controller: PetDetailsController
@@ -302,12 +302,12 @@ struct EditActiveMedSheet: View {
     }
 }
 
-// MARK: Edit Reminder (pencil on a reminder card)
+// MARK: Edit Reminder
+
 struct EditReminderSheet: View {
     @Binding var isPresented: Bool
     @ObservedObject var controller: ReminderController
     var onSave: () -> Void = {}
-    var onDelete: () -> Void = {}
 
     var body: some View {
         CustomEditSheet(
@@ -318,12 +318,13 @@ struct EditReminderSheet: View {
                 SheetFieldItem(placeholder: "Pet", text: $controller.editPetName)
             ],
             onSave: onSave,
-            onDelete: onDelete
+            showsDeleteButton: false
         )
     }
 }
 
-// MARK: Pet Photo (camera icon in Pet Details)
+// MARK: Pet Photo
+
 struct PhotoOptionsSheet: View {
     @Binding var isPresented: Bool
     var onTakePhoto: () -> Void = {}
@@ -352,11 +353,143 @@ struct PhotoOptionsSheet: View {
     }
 }
 
-// MARK: Choose Action (green button in Pet Tab and Reminder Tab)
+// MARK: Choose Pet
+
+struct ChoosePetSheet: View {
+    @Binding var isPresented: Bool
+    let pets: [Pet]
+    var onChoose: (Pet) -> Void = { _ in }
+
+    var body: some View {
+        CustomAlertContainer(isPresented: $isPresented, title: "Choose Pet", showsBackButton: false) {
+            ScrollView {
+                VStack(spacing: 10) {
+                    ForEach(pets) { pet in
+                        SheetButton(title: pet.name) {
+                            onChoose(pet)
+                        }
+                    }
+                }
+            }
+            .frame(maxHeight: 250)
+            .padding(.horizontal, 10)
+            .padding(.top, 10)
+
+            SheetButton(title: "Cancel", backgroundColor: Color.gray.opacity(0.4), foregroundColor: .red) {
+                isPresented = false
+            }
+            .padding(.horizontal, 10)
+        }
+    }
+}
+
+// MARK: Add Documentation
+
+struct AddDocumentationSheet: View {
+    @Binding var isPresented: Bool
+    @ObservedObject var controller: DocumentationController
+    var onSave: () -> Void = {}
+
+    var body: some View {
+        CustomAlertContainer(isPresented: $isPresented, title: "Add Documentation") {
+            VStack(spacing: 10) {
+                if let image = controller.documentImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 120, height: 120)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+
+                if let pet = controller.selectedPet {
+                    Text("For \(pet.name)")
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundStyle(Color.gray)
+                }
+
+                SheetTextField(placeholder: "e.g Vomiting", text: $controller.incidentDescription)
+
+                DatePicker(
+                    "Date and Time", selection: $controller.incidentDate,
+                    displayedComponents: [.date, .hourAndMinute]
+                )
+                .font(.system(size: 15, weight: .regular, design: .rounded))
+                .tint(Color.blue)
+
+                SheetButton(title: controller.isSaving ? "Saving..." : "Save", action: onSave)
+                    .disabled(controller.isSaving)
+                    .padding(.top, 4)
+            }
+        }
+    }
+}
+
+struct DocumentationOverlay: View {
+    @EnvironmentObject var router: AppRouter
+    @EnvironmentObject var petController: PetController
+    @EnvironmentObject var addPetController: AddPetController
+    @EnvironmentObject var documentationController: DocumentationController
+
+    var body: some View {
+        ZStack {
+            Color.clear
+                .frame(width: 0, height: 0)
+
+            if documentationController.showChoosePet {
+                ChoosePetSheet(isPresented: $documentationController.showChoosePet, pets: petController.pets) { pet in
+                    documentationController.petChosen(pet, addPetController: addPetController, router: router)
+                }
+            }
+
+            if documentationController.showPhotoOptions {
+                PhotoOptionsSheet(
+                    isPresented: $documentationController.showPhotoOptions,
+                    onTakePhoto: { documentationController.takePhoto() },
+                    onChoosePhoto: { documentationController.choosePhoto() }
+                )
+            }
+
+            if let image = documentationController.cropImage {
+                PhotoCropper(
+                    image: image,
+                    isSquare: true,
+                    onCancel: { documentationController.cancel() },
+                    onSave: { croppedImage in
+                        documentationController.photoCropped(croppedImage)
+                    }
+                )
+            }
+
+            if documentationController.showDocumentationSheet {
+                AddDocumentationSheet(
+                    isPresented: $documentationController.showDocumentationSheet,
+                    controller: documentationController,
+                    onSave: { Task { await documentationController.saveDocumentation() } }
+                )
+            }
+        }
+        .errorAlert($documentationController.errorMessage)
+        .photosPicker(isPresented: $documentationController.showPhotoLibrary, selection: $documentationController.selectedPhotoItem, matching: .images)
+        .onChange(of: documentationController.selectedPhotoItem) {
+            Task {
+                await documentationController.handlePickedItem()
+            }
+        }
+        .fullScreenCover(isPresented: $documentationController.showCamera) {
+            CameraPicker { image in
+                documentationController.handleCameraImage(image)
+            }
+            .ignoresSafeArea()
+        }
+    }
+}
+
 struct ChooseActionSheet: View {
     @Binding var isPresented: Bool
     var onAddPet: () -> Void = {}
     var onAddEvent: () -> Void = {}
+    var onAddDocumentation: () -> Void = {}
+    var onAddMedHistory: () -> Void = {}
 
     var body: some View {
         CustomAlertContainer(isPresented: $isPresented, title: "Choose Action", showsBackButton: false) {
@@ -369,6 +502,16 @@ struct ChooseActionSheet: View {
                 SheetButton(title: "Add Event") {
                     isPresented = false
                     onAddEvent()
+                }
+
+                SheetButton(title: "Add Documentation") {
+                    isPresented = false
+                    onAddDocumentation()
+                }
+
+                SheetButton(title: "Add Medical History") {
+                    isPresented = false
+                    onAddMedHistory()
                 }
 
                 SheetButton(title: "Cancel", backgroundColor: Color.gray.opacity(0.4), foregroundColor: .red) {

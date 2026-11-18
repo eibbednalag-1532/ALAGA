@@ -7,8 +7,6 @@
 
 import Foundation
 
-// MARK: Reminder Model
-//One row of the "reminders" table in Supabase (made from the Add Event page)
 nonisolated struct Reminder: Codable, Identifiable, Hashable {
     var id: UUID? = nil
     var userId: UUID? = nil

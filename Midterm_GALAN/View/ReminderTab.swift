@@ -11,6 +11,7 @@ struct ReminderTab: View {
     @EnvironmentObject var addPetController: AddPetController
     @EnvironmentObject var reminderController: ReminderController
     @EnvironmentObject var petController: PetController
+    @EnvironmentObject var documentationController: DocumentationController
     @State private var showChooseAction = false
 
     var body: some View {
@@ -63,18 +64,30 @@ struct ReminderTab: View {
                 ChooseActionSheet(
                     isPresented: $showChooseAction,
                     onAddPet: { addPetController.startNewPet(router: router) },
-                    onAddEvent: { reminderController.startNewEvent(router: router) }
+                    onAddEvent: { reminderController.startNewEvent(router: router) },
+                    onAddDocumentation: { documentationController.startDocumentation(petController: petController, addPetController: addPetController, router: router) },
+                    onAddMedHistory: { documentationController.startMedicalHistory(petController: petController, addPetController: addPetController, router: router) }
                 )
             }
 
-            //Pencil on a reminder card > edit or delete it
+            if router.selectedTab == 2 {
+                DocumentationOverlay()
+            }
+            
             if reminderController.showEditReminder {
                 EditReminderSheet(
                     isPresented: $reminderController.showEditReminder,
                     controller: reminderController,
-                    onSave: { Task { await reminderController.saveEditedReminder(petController: petController) } },
-                    onDelete: { Task { await reminderController.deleteEditedReminder() } }
+                    onSave: { Task { await reminderController.saveEditedReminder(petController: petController) } }
                 )
+            }
+
+            if reminderController.showDeleteReminder {
+                ConfirmDeleteSheet(isPresented: $reminderController.showDeleteReminder) {
+                    Task {
+                        await reminderController.deleteChosenReminder()
+                    }
+                }
             }
 
         }
@@ -117,13 +130,17 @@ struct ReminderList: View {
             }
 
             ForEach(reminders) { reminder in
-                ReminderListCard(
-                    eventName: reminder.eventType,
-                    dateTime: reminderController.formattedDate(reminder.eventDate),
-                    petName: reminder.petName,
-                    iconName: reminderController.iconName(for: reminder.eventType),
-                    onEdit: { reminderController.beginEditReminder(reminder) }
-                )
+                SwipeToDeleteCard(
+                    onTap: { reminderController.beginEditReminder(reminder) },
+                    onDelete: { reminderController.askDeleteReminder(reminder) }
+                ) {
+                    ReminderListCard(
+                        eventName: reminder.eventType,
+                        dateTime: reminderController.formattedDate(reminder.eventDate),
+                        petName: reminder.petName,
+                        iconName: reminderController.iconName(for: reminder.eventType)
+                    )
+                }
             }
         }
     }
@@ -133,7 +150,6 @@ struct ReminderListCard: View {
     let dateTime: String
     let petName: String
     let iconName: String
-    var onEdit: () -> Void = {}
 
     var body: some View {
         HStack {
@@ -151,22 +167,73 @@ struct ReminderListCard: View {
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 8) {
-                //Opens the Edit Reminder alert sheet
-                Button(action: onEdit) {
-                    Image(systemName: "pencil")
-                        .foregroundStyle(Color.black)
-                }
-
-                Image(systemName: iconName)
-                    .font(.system(size: 32))
-                    .foregroundStyle(Color.blue)
-            }
+            Image(systemName: iconName)
+                .font(.system(size: 32))
+                .foregroundStyle(Color.blue)
         }
         .padding(15)
         .frame(maxWidth: .infinity)
         .background(Color.white)
         .cornerRadius(15)
+    }
+}
+
+struct SwipeToDeleteCard<Content: View>: View {
+    var onTap: () -> Void = {}
+    var onDelete: () -> Void = {}
+    @ViewBuilder let content: Content
+
+    @State private var offsetX: CGFloat = 0
+    @State private var lastOffsetX: CGFloat = 0
+    private let trashWidth: CGFloat = 80
+
+    var body: some View {
+        content
+            .offset(x: offsetX)
+            .background(alignment: .trailing) {
+               
+                Button(action: {
+                    close()
+                    onDelete()
+                }) {
+                    Image(systemName: "trash.fill")
+                        .font(.system(size: 24))
+                        .foregroundStyle(Color.white)
+                        .frame(width: trashWidth)
+                        .frame(maxHeight: .infinity)
+                        .background(Color.red)
+                        .cornerRadius(15)
+                }
+                .opacity(offsetX < 0 ? 1 : 0)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if offsetX < 0 {
+                    close()
+                } else {
+                    onTap()
+                }
+            }
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 20)
+                    .onChanged { value in
+                        guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                        offsetX = min(0, max(lastOffsetX + value.translation.width, -trashWidth - 30))
+                    }
+                    .onEnded { _ in
+                        withAnimation(.easeOut) {
+                            offsetX = offsetX < -trashWidth / 2 ? -trashWidth - 10 : 0
+                        }
+                        lastOffsetX = offsetX
+                    }
+            )
+    }
+
+    private func close() {
+        withAnimation(.easeOut) {
+            offsetX = 0
+        }
+        lastOffsetX = 0
     }
 }
 
@@ -178,4 +245,5 @@ struct ReminderListCard: View {
     .environmentObject(AddPetController())
     .environmentObject(ReminderController())
     .environmentObject(PetController())
+    .environmentObject(DocumentationController())
 }

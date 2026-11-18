@@ -92,7 +92,6 @@ struct LogIn: View {
                 .frame(maxWidth: 300)
                 .padding(.bottom, 8)
             
-            //Shows "Account created! Check your email..." after signing up
             if let info = authController.infoMessage {
                 Text(info)
                     .font(.system(size: 13, weight: .regular))

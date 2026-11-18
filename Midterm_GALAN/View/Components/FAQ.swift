@@ -61,6 +61,26 @@ struct FAQ: View {
                             question: "What is the purpose of near vet clinic?",
                             answer: "Near Vet Clinics shows the veterinary clinics close to you, their schedule and services, so you can quickly find help for your pet."
                         )
+
+                        FAQRow(
+                            question: "How to delete an event?",
+                            answer: "Go to the Reminder tab, slide the event card to the left and tap the trash can. Press Delete to confirm, and the event is also removed from the Home tab."
+                        )
+
+                        FAQRow(
+                            question: "How to edit an event?",
+                            answer: "Go to the Reminder tab and tap the event card. Change the event type or pet, then press Save."
+                        )
+
+                        FAQRow(
+                            question: "How to add a pet photo?",
+                            answer: "Open your pet from the Pets tab and tap the camera icon near the profile picture. Choose Take a Photo or Pick Photo in Gallery, move and resize the photo inside the circle, then press Save."
+                        )
+
+                        FAQRow(
+                            question: "How to see the pet's details?",
+                            answer: "Go to the Pets tab and tap a pet card. The Overview shows the pet information and active medication, Medical History shows the health records, and Gallery shows the documented photos."
+                        )
                     }
                     .padding(.horizontal, 25)
                 }

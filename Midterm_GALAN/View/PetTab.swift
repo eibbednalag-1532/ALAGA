@@ -11,6 +11,7 @@ struct PetTab: View {
     @EnvironmentObject var router: AppRouter
     @EnvironmentObject var addPetController: AddPetController
     @EnvironmentObject var reminderController: ReminderController
+    @EnvironmentObject var documentationController: DocumentationController
     @EnvironmentObject var petController: PetController
     @State private var showChooseAction = false
     
@@ -55,8 +56,14 @@ struct PetTab: View {
                 ChooseActionSheet(
                     isPresented: $showChooseAction,
                     onAddPet: { addPetController.startNewPet(router: router) },
-                    onAddEvent: { reminderController.startNewEvent(router: router) }
+                    onAddEvent: { reminderController.startNewEvent(router: router) },
+                    onAddDocumentation: { documentationController.startDocumentation(petController: petController, addPetController: addPetController, router: router) },
+                    onAddMedHistory: { documentationController.startMedicalHistory(petController: petController, addPetController: addPetController, router: router) }
                 )
+            }
+
+            if router.selectedTab == 1 {
+                DocumentationOverlay()
             }
         }
         .errorAlert($petController.errorMessage)
@@ -87,7 +94,6 @@ struct PetGreeting: View {
     }
 }
 
-//Green button, also reused in the Reminder Tab
 struct AddButton: View {
     var action: () -> Void = {}
     
@@ -133,7 +139,6 @@ struct PetLink: View {
     let pet: Pet
     
     var body: some View {
-        //Opens Pet Details, the back arrow there brings you back here
         NavigationLink(value: AppRoute.petDetails(pet)) {
             PetsCard(petName: pet.name, breed: pet.breed, age: pet.age, iconName: pet.iconName, photoUrl: pet.photoUrl)
         }
@@ -149,4 +154,5 @@ struct PetLink: View {
     .environmentObject(PetController())
     .environmentObject(AddPetController())
     .environmentObject(ReminderController())
+    .environmentObject(DocumentationController())
 }

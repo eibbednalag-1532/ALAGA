@@ -10,7 +10,7 @@ import Supabase
 import Combine
 
 // MARK: Pet List Controller
-//Loads, adds, edits and deletes the user's pets in Supabase
+
 @MainActor
 final class PetController: ObservableObject {
     @Published var pets: [Pet] = []
@@ -29,11 +29,10 @@ final class PetController: ObservableObject {
                 .execute()
                 .value
         } catch {
-            errorMessage = error.localizedDescription
+            print("Could not load pets: \(error.localizedDescription)")
         }
     }
 
-    //Saves a new pet and gives back the saved pet (with its id)
     func addPet(_ pet: Pet) async throws -> Pet {
         let savedPet: Pet = try await supabase
             .from("pets")
@@ -71,7 +70,6 @@ final class PetController: ObservableObject {
         guard let id = pet.id else { return false }
 
         do {
-            //Medical history, medication and gallery are deleted too (on delete cascade)
             try await supabase
                 .from("pets")
                 .delete()
@@ -86,7 +84,6 @@ final class PetController: ObservableObject {
         }
     }
 
-    //Picks the icon for the pet card from the breed
     func iconName(for breed: String) -> String {
         let text = breed.lowercased()
         let catWords = ["cat", "persian", "siamese", "puspin", "maine", "ragdoll", "bengal", "sphynx"]

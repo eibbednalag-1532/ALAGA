@@ -70,7 +70,6 @@ struct SaveButton: View {
     @EnvironmentObject var addPetController: AddPetController
     
     var body: some View {
-        //Goes to Medical History, the back button brings you back here
         CustomSaveButton(title: "Save") {
             addPetController.goToMedHistory(router: router)
         }

@@ -13,8 +13,6 @@ import Combine
 @MainActor
 final class ProfileController: ObservableObject {
     @Published var profile: UserProfile? = nil
-
-    //Account (edit) page fields
     @Published var username: String = ""
     @Published var email: String = ""
     @Published var contactNumber: String = ""
@@ -26,7 +24,6 @@ final class ProfileController: ObservableObject {
         profile?.firstName ?? ""
     }
 
-    //Shows the username, or the first and last name if there is no username
     var displayUsername: String {
         let name = (profile?.username ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let fullName = "\(profile?.firstName ?? "") \(profile?.lastName ?? "")".trimmingCharacters(in: .whitespacesAndNewlines)
@@ -61,7 +58,6 @@ final class ProfileController: ObservableObject {
                 .execute()
                 .value
 
-            //If the profile row is missing, make one from the logged in user
             profile = profiles.first ?? UserProfile(id: user.id, email: user.email)
         } catch {
             errorMessage = error.localizedDescription
@@ -69,7 +65,7 @@ final class ProfileController: ObservableObject {
     }
 
     // MARK: Navigation
-    //Profile > Account (edit page)
+  
     func startEditing(router: AppRouter) {
         username = displayUsername == "N/A" ? "" : displayUsername
         email = profile?.email ?? ""
@@ -93,7 +89,6 @@ final class ProfileController: ObservableObject {
                 .execute()
 
             profile = updatedProfile
-            //Back to the Profile page
             router.pop()
         } catch {
             errorMessage = error.localizedDescription

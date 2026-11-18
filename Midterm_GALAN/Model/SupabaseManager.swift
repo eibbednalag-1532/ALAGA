@@ -8,8 +8,6 @@
 import Foundation
 import Supabase
 
-// MARK: Shared Supabase Client
-//Every controller uses this one client to talk to the cloud database
 let supabase = SupabaseClient(
     supabaseURL: URL(string: SupabaseConfig.url)!,
     supabaseKey: SupabaseConfig.anonKey
