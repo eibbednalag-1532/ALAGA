@@ -148,9 +148,10 @@ struct OrDesign: View {
 }
 
 struct GoogleButton: View {
+    @EnvironmentObject var authController: AuthController
     var body: some View {
         Button(action: {
-            
+            authController.goToGoogleSignIn()
         }) {
             HStack{
                 

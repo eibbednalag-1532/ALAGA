@@ -17,6 +17,10 @@ struct Midterm_GALANApp: App {
                     SignIn()
                 } else if authController.currentScreen == .signup {
                     Signup()
+                } else if authController.currentScreen == .googleSignIn {
+                    GoogleSignIn()
+                } else if authController.currentScreen == .otp {
+                    EnterOTP()
                 } else if authController.currentScreen == .home {
                     MainTabView()
                 }

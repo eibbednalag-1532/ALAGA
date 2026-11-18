@@ -42,9 +42,9 @@ struct PetsCard: View {
                     .foregroundStyle(Color.black)
 
                 HStack(spacing: 6) {
-                    Circle()
-                        .fill(Color.green)
-                        .frame(width: 10, height: 10)
+                    Image(systemName: "pawprint.circle.fill")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color.green)
 
                     Text(breed)
                         .font(.system(size: 13, weight: .regular))
@@ -52,9 +52,9 @@ struct PetsCard: View {
                 }
 
                 HStack(spacing: 6) {
-                    Circle()
-                        .fill(Color.gray.opacity(0.5))
-                        .frame(width: 10, height: 10)
+                    Image(systemName: "clock.fill")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color.gray.opacity(0.6))
 
                     Text(age)
                         .font(.system(size: 13, weight: .regular))
@@ -71,7 +71,7 @@ struct PetsCard: View {
 
                 Spacer()
 
-                Image(systemName: "info.circle")
+                Image(systemName: "chevron.right.circle")
                     .foregroundStyle(Color.blue)
             }
             .padding(.vertical, 5)

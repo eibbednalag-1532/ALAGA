@@ -20,6 +20,12 @@ final class ReminderController: ObservableObject {
     @Published var petName: String = ""
     @Published var eventDate = Date()
 
+    //Edit Reminder alert sheet fields
+    @Published var showEditReminder = false
+    @Published var editingReminder: Reminder? = nil
+    @Published var editEventType: String = ""
+    @Published var editPetName: String = ""
+
     @Published var isLoading = false
     @Published var errorMessage: String? = nil
 
@@ -34,6 +40,13 @@ final class ReminderController: ObservableObject {
         reminders
             .filter { $0.eventDate < Date() }
             .sorted { $0.eventDate > $1.eventDate }
+    }
+
+    //Reminders on the day picked in the Home Tab calendar
+    func remindersOn(_ date: Date) -> [Reminder] {
+        reminders
+            .filter { Calendar.current.isDate($0.eventDate, inSameDayAs: date) }
+            .sorted { $0.eventDate < $1.eventDate }
     }
 
     func fetchReminders() async {
@@ -82,20 +95,67 @@ final class ReminderController: ObservableObject {
         )
 
         do {
-            let savedReminder: Reminder = try await supabase
-                .from("reminders")
-                .insert(reminder)
-                .select()
-                .single()
-                .execute()
-                .value
-
-            reminders.append(savedReminder)
+            try await addReminder(reminder)
             //Back to the page that opened Add Event
             router.pop()
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    //Saves one reminder to Supabase, also used by the Add Pet pages
+    func addReminder(_ reminder: Reminder) async throws {
+        let savedReminder: Reminder = try await supabase
+            .from("reminders")
+            .insert(reminder)
+            .select()
+            .single()
+            .execute()
+            .value
+
+        reminders.append(savedReminder)
+    }
+
+    // MARK: Edit Reminder (pencil on a reminder card)
+    func beginEditReminder(_ reminder: Reminder) {
+        editingReminder = reminder
+        editEventType = reminder.eventType
+        editPetName = reminder.petName
+        showEditReminder = true
+    }
+
+    func saveEditedReminder(petController: PetController) async {
+        guard var reminder = editingReminder, let id = reminder.id else { return }
+
+        let cleanPet = editPetName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let matchedPet = petController.pets.first { $0.name.lowercased() == cleanPet.lowercased() }
+
+        reminder.eventType = editEventType.trimmingCharacters(in: .whitespacesAndNewlines)
+        reminder.petName = matchedPet?.name ?? cleanPet
+        reminder.petId = matchedPet?.id
+
+        do {
+            try await supabase
+                .from("reminders")
+                .update(reminder)
+                .eq("id", value: id.uuidString)
+                .execute()
+
+            if let index = reminders.firstIndex(where: { $0.id == id }) {
+                reminders[index] = reminder
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        editingReminder = nil
+    }
+
+    //Called after the delete is confirmed, the Home Tab updates too
+    func deleteEditedReminder() async {
+        if let reminder = editingReminder {
+            await deleteReminder(reminder)
+        }
+        editingReminder = nil
     }
 
     func deleteReminder(_ reminder: Reminder) async {

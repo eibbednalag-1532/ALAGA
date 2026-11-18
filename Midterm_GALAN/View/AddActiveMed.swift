@@ -71,17 +71,14 @@ struct FillActiveMed: View {
 }
 struct ActiveMedSaveButton: View {
     @EnvironmentObject var router: AppRouter
-    @EnvironmentObject var petController: PetController
+    @EnvironmentObject var reminderController: ReminderController
     @EnvironmentObject var addPetController: AddPetController
 
     var body: some View {
-        //Saves the pet to Supabase and goes back to the Pets Tab
-        CustomSaveButton(title: addPetController.isLoading ? "Saving..." : "Save") {
-            Task {
-                await addPetController.savePet(petController: petController, router: router)
-            }
+        //Goes to Add Event, the back button brings you back here
+        CustomSaveButton(title: "Save") {
+            addPetController.goToAddEvent(reminderController: reminderController, router: router)
         }
-        .disabled(addPetController.isLoading)
         .padding(.vertical, 40)
     }
 }
@@ -91,6 +88,6 @@ struct ActiveMedSaveButton: View {
         AddActiveMed()
     }
     .environmentObject(AppRouter())
-    .environmentObject(PetController())
+    .environmentObject(ReminderController())
     .environmentObject(AddPetController())
 }

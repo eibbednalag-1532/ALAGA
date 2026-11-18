@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AddEvent: View {
     @EnvironmentObject var reminderController: ReminderController
+    @EnvironmentObject var addPetController: AddPetController
     var body: some View {
         ZStack(alignment: .topLeading) {
             AngularGradient(
@@ -29,6 +30,8 @@ struct AddEvent: View {
                     EventSaveButton()
                 }
             }
+            //Shows errors while saving a new pet
+            .errorAlert($addPetController.errorMessage)
             
             
         }
@@ -53,12 +56,18 @@ struct EventHeader: View {
     }
 }
 struct EventDetails: View {
+    @EnvironmentObject var router: AppRouter
     @EnvironmentObject var reminderController: ReminderController
     var body: some View {
         VStack {
             AddPetTextField(title: "Event Type", example: "e.g Check-Up", text: $reminderController.eventType)
             
-            AddPetTextField(title: "Pet", example: "e.g Buddy", text: $reminderController.petName)
+            //When adding a new pet, the event is for that pet so it can't be changed
+            if router.path.contains(.addActiveMed) {
+                AddPetTextField(title: "Pet", example: reminderController.petName)
+            } else {
+                AddPetTextField(title: "Pet", example: "e.g Buddy", text: $reminderController.petName)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 35)
@@ -91,15 +100,23 @@ struct EventSaveButton: View {
     @EnvironmentObject var router: AppRouter
     @EnvironmentObject var petController: PetController
     @EnvironmentObject var reminderController: ReminderController
+    @EnvironmentObject var addPetController: AddPetController
     
     var body: some View {
-        //Saves the event to Supabase and goes back to the page that opened it
-        CustomSaveButton(title: reminderController.isLoading ? "Saving..." : "Save") {
+        let isSaving = reminderController.isLoading || addPetController.isLoading
+        
+        CustomSaveButton(title: isSaving ? "Saving..." : "Save") {
             Task {
-                await reminderController.saveEvent(petController: petController, router: router)
+                if router.path.contains(.addActiveMed) {
+                    //Last Add Pet page: saves the pet, medical history, medication and event, then opens the Pets Tab
+                    await addPetController.savePet(petController: petController, reminderController: reminderController, router: router)
+                } else {
+                    //Saves the event to Supabase and goes back to the page that opened it
+                    await reminderController.saveEvent(petController: petController, router: router)
+                }
             }
         }
-        .disabled(reminderController.isLoading)
+        .disabled(isSaving)
         .padding(.vertical, 30)
     }
 }
@@ -112,4 +129,5 @@ struct EventSaveButton: View {
     .environmentObject(AppRouter())
     .environmentObject(PetController())
     .environmentObject(ReminderController())
+    .environmentObject(AddPetController())
 }

@@ -10,6 +10,7 @@ struct ReminderTab: View {
     @EnvironmentObject var router: AppRouter
     @EnvironmentObject var addPetController: AddPetController
     @EnvironmentObject var reminderController: ReminderController
+    @EnvironmentObject var petController: PetController
     @State private var showChooseAction = false
 
     var body: some View {
@@ -66,6 +67,16 @@ struct ReminderTab: View {
                 )
             }
 
+            //Pencil on a reminder card > edit or delete it
+            if reminderController.showEditReminder {
+                EditReminderSheet(
+                    isPresented: $reminderController.showEditReminder,
+                    controller: reminderController,
+                    onSave: { Task { await reminderController.saveEditedReminder(petController: petController) } },
+                    onDelete: { Task { await reminderController.deleteEditedReminder() } }
+                )
+            }
+
         }
         .errorAlert($reminderController.errorMessage)
     }
@@ -110,18 +121,9 @@ struct ReminderList: View {
                     eventName: reminder.eventType,
                     dateTime: reminderController.formattedDate(reminder.eventDate),
                     petName: reminder.petName,
-                    iconName: reminderController.iconName(for: reminder.eventType)
+                    iconName: reminderController.iconName(for: reminder.eventType),
+                    onEdit: { reminderController.beginEditReminder(reminder) }
                 )
-                //Press and hold a card to delete it
-                .contextMenu {
-                    Button(role: .destructive) {
-                        Task {
-                            await reminderController.deleteReminder(reminder)
-                        }
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-                }
             }
         }
     }
@@ -131,6 +133,7 @@ struct ReminderListCard: View {
     let dateTime: String
     let petName: String
     let iconName: String
+    var onEdit: () -> Void = {}
 
     var body: some View {
         HStack {
@@ -148,9 +151,17 @@ struct ReminderListCard: View {
 
             Spacer()
 
-            Image(systemName: iconName)
-                .font(.system(size: 32))
-                .foregroundStyle(Color.blue)
+            VStack(alignment: .trailing, spacing: 8) {
+                //Opens the Edit Reminder alert sheet
+                Button(action: onEdit) {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(Color.black)
+                }
+
+                Image(systemName: iconName)
+                    .font(.system(size: 32))
+                    .foregroundStyle(Color.blue)
+            }
         }
         .padding(15)
         .frame(maxWidth: .infinity)
@@ -166,4 +177,5 @@ struct ReminderListCard: View {
     .environmentObject(AppRouter())
     .environmentObject(AddPetController())
     .environmentObject(ReminderController())
+    .environmentObject(PetController())
 }

@@ -10,7 +10,7 @@ import Supabase
 import Combine
 
 // MARK: Add Pet Controller
-//Holds the 3 Add Pet pages (Pet Information > Medical History > Active Medication) and saves them together
+//Holds the 4 Add Pet pages (Pet Information > Medical History > Active Medication > Add Event) and saves them together
 @MainActor
 final class AddPetController: ObservableObject {
     //Pet Information page
@@ -60,8 +60,18 @@ final class AddPetController: ObservableObject {
         router.push(.addActiveMed)
     }
 
+    //Active Medication > Add Event (the pet field is filled with the new pet's name)
+    func goToAddEvent(reminderController: ReminderController, router: AppRouter) {
+        reminderController.eventType = ""
+        reminderController.petName = clean(petName)
+        reminderController.eventDate = Date()
+        reminderController.errorMessage = nil
+        router.push(.addEvent)
+    }
+
     // MARK: Save everything to Supabase
-    func savePet(petController: PetController, router: AppRouter) async {
+    //Called by the Save button in Add Event, the last Add Pet page
+    func savePet(petController: PetController, reminderController: ReminderController, router: AppRouter) async {
         isLoading = true
         defer { isLoading = false }
 
@@ -129,6 +139,18 @@ final class AddPetController: ObservableObject {
                     .execute()
             }
 
+            //The event is saved only if an event type was typed
+            let cleanEventType = clean(reminderController.eventType)
+            if !cleanEventType.isEmpty {
+                let reminder = Reminder(
+                    petId: petId,
+                    petName: savedPet.name,
+                    eventType: cleanEventType,
+                    eventDate: reminderController.eventDate
+                )
+                try await reminderController.addReminder(reminder)
+            }
+
             reset()
             //Back to the Pets Tab
             router.goToTab(1)
@@ -159,7 +181,10 @@ final class AddPetController: ObservableObject {
         errorMessage = nil
     }
 
+    //Removes extra spaces, and "N/A" (not applicable) is saved as empty
     private func clean(_ text: String) -> String {
-        text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let notApplicable = ["n/a", "na", "n.a.", "none"]
+        return notApplicable.contains(cleanText.lowercased()) ? "" : cleanText
     }
 }

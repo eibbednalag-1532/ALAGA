@@ -44,9 +44,8 @@ struct PetDetails: View {
                     onAddHistory: { controller.beginEditHistory(nil) },
                     onAddGallery: { controller.beginEditGallery(nil) },
                     onDeletePet: {
-                        Task {
-                            await controller.deletePet(petController: petController, router: router)
-                        }
+                        //Asks first before deleting
+                        controller.showDeletePetConfirm = true
                     }
                 )
 
@@ -107,22 +106,40 @@ struct PetDetails: View {
                     onDelete: { Task { await controller.deleteGallery() } }
                 )
             }
+
+            if controller.showDeletePetConfirm {
+                ConfirmDeleteSheet(isPresented: $controller.showDeletePetConfirm, message: "\(controller.pet.name) and all of its details will be permanently deleted. Do you want to continue?") {
+                    Task {
+                        await controller.deletePet(petController: petController, router: router)
+                    }
+                }
+            }
+
+            //Camera icon > choose where the photo comes from
+            if controller.showPhotoOptions {
+                PhotoOptionsSheet(
+                    isPresented: $controller.showPhotoOptions,
+                    onTakePhoto: { controller.takePhoto(for: .pet) },
+                    onChoosePhoto: { controller.choosePhoto(for: .pet) }
+                )
+            }
+
+            //Move and resize the pet photo inside the circle, then Save
+            if let image = controller.cropImage {
+                PhotoCropper(
+                    image: image,
+                    onCancel: { controller.cropImage = nil },
+                    onSave: { croppedImage in
+                        Task {
+                            await controller.savePetPhoto(croppedImage, petController: petController)
+                        }
+                    }
+                )
+            }
         }
         .navigationBarBackButtonHidden(true)
         .errorAlert($controller.errorMessage)
         // MARK: Photos
-        //Camera icon > choose where the photo comes from
-        .confirmationDialog("Pet Photo", isPresented: $controller.showPhotoOptions, titleVisibility: .visible) {
-            Button("Take Photo") {
-                controller.takePhoto(for: .pet)
-            }
-
-            Button("Choose from Photos") {
-                controller.choosePhoto(for: .pet)
-            }
-
-            Button("Cancel", role: .cancel) {}
-        }
         .photosPicker(isPresented: $controller.showPhotoLibrary, selection: $controller.selectedPhotoItem, matching: .images)
         .onChange(of: controller.selectedPhotoItem) {
             Task {

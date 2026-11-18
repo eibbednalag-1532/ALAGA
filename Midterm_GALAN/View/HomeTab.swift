@@ -76,23 +76,67 @@ struct Greetings: View {
 
 struct CalendarView: View {
     @EnvironmentObject var homeController: HomeController
+    @EnvironmentObject var reminderController: ReminderController
     var body: some View {
         VStack {
             Text("Calendar")
                 .font(.system(size: 19, weight: .bold, design: .rounded))
                 .offset(x: -136)
             
-            DatePicker(
-                "Selected Date and Time", selection: $homeController.selectedDateTime,
-                displayedComponents: [.date, .hourAndMinute]
-            )
-            .datePickerStyle(.graphical)
-            .tint(Color.blue)
+            VStack(alignment: .leading, spacing: 8) {
+                DatePicker(
+                    "Selected Date and Time", selection: $homeController.selectedDateTime,
+                    displayedComponents: [.date, .hourAndMinute]
+                )
+                .datePickerStyle(.graphical)
+                .tint(Color.blue)
+                
+                //Events on the day picked in the calendar
+                CalendarEvents()
+            }
             .padding()
             .background(Color.white)
             .cornerRadius(15)
         }
         
+    }
+}
+struct CalendarEvents: View {
+    @EnvironmentObject var homeController: HomeController
+    @EnvironmentObject var reminderController: ReminderController
+    var body: some View {
+        let events = reminderController.remindersOn(homeController.selectedDateTime)
+        
+        VStack(alignment: .leading, spacing: 6) {
+            Rectangle()
+                .frame(height: 1)
+                .foregroundStyle(Color.gray.opacity(0.3))
+            
+            if events.isEmpty {
+                Text("No events on this day")
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundStyle(Color.gray)
+            }
+            
+            ForEach(events) { event in
+                HStack(spacing: 10) {
+                    Image(systemName: reminderController.iconName(for: event.eventType))
+                        .foregroundStyle(Color.blue)
+                        .frame(width: 22)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(event.eventType) - \(event.petName)")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        
+                        Text(event.eventDate.formatted(date: .omitted, time: .shortened))
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundStyle(Color.gray)
+                    }
+                    
+                    Spacer()
+                }
+            }
+        }
     }
 }
 struct ComingReminder: View {

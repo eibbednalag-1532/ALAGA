@@ -71,6 +71,12 @@ struct InfoFields: View {
                 .frame(maxWidth: 300, maxHeight: 35)
                 .padding(.bottom,8)
             
+            TextField("Contact Number", text: $authController.contactNumber)
+                .textFieldStyle(.roundedBorder)
+                .keyboardType(.phonePad)
+                .frame(maxWidth: 300, maxHeight: 35)
+                .padding(.bottom,8)
+            
             SecureField("Password", text: $authController.password)
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 300, maxHeight: 35)

@@ -118,42 +118,85 @@ struct CustomEditSheet: View {
     var onSave: () -> Void = {}
     var onDelete: () -> Void = {}
 
+    //Shows the Confirm Delete alert sheet before deleting
+    @State private var showConfirmDelete = false
+
     var body: some View {
-        CustomAlertContainer(isPresented: $isPresented, title: title) {
-            VStack(spacing: 8) {
-                ForEach(fields.indices, id: \.self) { index in
-                    SheetTextField(
-                        placeholder: fields[index].placeholder,
-                        text: fields[index].text,
-                        unit: fields[index].unit
-                    )
-                }
+        ZStack {
+            CustomAlertContainer(isPresented: $isPresented, title: title) {
+                VStack(spacing: 8) {
+                    ForEach(fields.indices, id: \.self) { index in
+                        SheetTextField(
+                            placeholder: fields[index].placeholder,
+                            text: fields[index].text,
+                            unit: fields[index].unit
+                        )
+                    }
 
-                if showsPhotoButtons {
+                    if showsPhotoButtons {
+                        HStack(spacing: 15) {
+                            SheetButton(title: "Take Photo", action: onTakePhoto)
+
+                            SheetButton(title: "Photos", action: onChoosePhoto)
+                        }
+                        .padding(.top, 4)
+
+                        //Shows after a photo is picked, it uploads when Save is pressed
+                        if photoAdded {
+                            Text("Photo added, press Save to upload it")
+                                .font(.system(size: 12, weight: .regular))
+                                .foregroundStyle(Color.green)
+                        }
+                    }
+
                     HStack(spacing: 15) {
-                        SheetButton(title: "Take Photo", action: onTakePhoto)
+                        SheetButton(title: "Save") {
+                            onSave()
+                            isPresented = false
+                        }
 
-                        SheetButton(title: "Photos", action: onChoosePhoto)
+                        //Asks first before deleting
+                        SheetButton(title: "Delete", backgroundColor: .red) {
+                            showConfirmDelete = true
+                        }
                     }
                     .padding(.top, 4)
-
-                    //Shows after a photo is picked, it uploads when Save is pressed
-                    if photoAdded {
-                        Text("Photo added, press Save to upload it")
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundStyle(Color.green)
-                    }
                 }
+            }
+
+            if showConfirmDelete {
+                ConfirmDeleteSheet(isPresented: $showConfirmDelete) {
+                    onDelete()
+                    isPresented = false
+                }
+            }
+        }
+    }
+}
+
+// MARK: Confirm Delete
+//Pops up after Delete is pressed, nothing is deleted until Delete is pressed here
+struct ConfirmDeleteSheet: View {
+    @Binding var isPresented: Bool
+    var message: String = "This will be permanently deleted. Do you want to continue?"
+    var onConfirm: () -> Void = {}
+
+    var body: some View {
+        CustomAlertContainer(isPresented: $isPresented, title: "Confirm Delete", showsBackButton: false) {
+            VStack(spacing: 10) {
+                Text(message)
+                    .font(.system(size: 15, weight: .regular, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
 
                 HStack(spacing: 15) {
-                    SheetButton(title: "Save") {
-                        onSave()
+                    SheetButton(title: "Cancel", backgroundColor: Color.gray.opacity(0.4), foregroundColor: .black) {
                         isPresented = false
                     }
 
                     SheetButton(title: "Delete", backgroundColor: .red) {
-                        onDelete()
                         isPresented = false
+                        onConfirm()
                     }
                 }
                 .padding(.top, 4)
@@ -256,6 +299,56 @@ struct EditActiveMedSheet: View {
             onSave: onSave,
             onDelete: onDelete
         )
+    }
+}
+
+// MARK: Edit Reminder (pencil on a reminder card)
+struct EditReminderSheet: View {
+    @Binding var isPresented: Bool
+    @ObservedObject var controller: ReminderController
+    var onSave: () -> Void = {}
+    var onDelete: () -> Void = {}
+
+    var body: some View {
+        CustomEditSheet(
+            isPresented: $isPresented,
+            title: "Reminder",
+            fields: [
+                SheetFieldItem(placeholder: "Event Type", text: $controller.editEventType),
+                SheetFieldItem(placeholder: "Pet", text: $controller.editPetName)
+            ],
+            onSave: onSave,
+            onDelete: onDelete
+        )
+    }
+}
+
+// MARK: Pet Photo (camera icon in Pet Details)
+struct PhotoOptionsSheet: View {
+    @Binding var isPresented: Bool
+    var onTakePhoto: () -> Void = {}
+    var onChoosePhoto: () -> Void = {}
+
+    var body: some View {
+        CustomAlertContainer(isPresented: $isPresented, title: "Pet Photo", showsBackButton: false) {
+            VStack(spacing: 10) {
+                SheetButton(title: "Take a Photo") {
+                    isPresented = false
+                    onTakePhoto()
+                }
+
+                SheetButton(title: "Pick Photo in Gallery") {
+                    isPresented = false
+                    onChoosePhoto()
+                }
+
+                SheetButton(title: "Cancel", backgroundColor: Color.gray.opacity(0.4), foregroundColor: .red) {
+                    isPresented = false
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.top, 10)
+        }
     }
 }
 

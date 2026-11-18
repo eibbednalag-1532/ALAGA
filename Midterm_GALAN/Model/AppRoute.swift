@@ -11,6 +11,8 @@ import Foundation
 nonisolated enum AppScreen {
     case signin
     case signup
+    case googleSignIn
+    case otp
     case home
 }
 

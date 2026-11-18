@@ -36,6 +36,8 @@ final class PetDetailsController: ObservableObject {
     @Published var showEditActiveMed = false
     @Published var showEditMedHistory = false
     @Published var showEditGallery = false
+    //Confirm Delete for the "Delete Pet" button in the ... menu
+    @Published var showDeletePetConfirm = false
 
     //Edit Pet Information fields
     @Published var editName: String = ""
@@ -73,6 +75,8 @@ final class PetDetailsController: ObservableObject {
     @Published var isUploading = false
     //Photo picked in the Gallery sheet, uploaded when Save is pressed
     @Published var galleryImageData: Data? = nil
+    //Pet photo waiting to be moved and resized (the Photo Cropper shows while this is not nil)
+    @Published var cropImage: UIImage? = nil
 
     init(pet: Pet) {
         self.pet = pet
@@ -405,6 +409,12 @@ final class PetDetailsController: ObservableObject {
 
         do {
             if let data = try await item.loadTransferable(type: Data.self) {
+                //Pet photo: opens the Photo Cropper first so it can be moved and resized
+                if photoTarget == .pet, let image = UIImage(data: data) {
+                    cropImage = image
+                    return
+                }
+
                 let imageData = UIImage(data: data)?.jpegData(compressionQuality: 0.7) ?? data
                 await usePhoto(imageData, petController: petController)
             }
@@ -415,6 +425,19 @@ final class PetDetailsController: ObservableObject {
 
     //Called after a photo is taken with the camera
     func handleCameraImage(_ image: UIImage, petController: PetController) async {
+        //Pet photo: opens the Photo Cropper first so it can be moved and resized
+        if photoTarget == .pet {
+            cropImage = image
+            return
+        }
+
+        guard let imageData = image.jpegData(compressionQuality: 0.7) else { return }
+        await usePhoto(imageData, petController: petController)
+    }
+
+    //Called by Save in the Photo Cropper, uploads the moved and resized photo
+    func savePetPhoto(_ image: UIImage, petController: PetController) async {
+        cropImage = nil
         guard let imageData = image.jpegData(compressionQuality: 0.7) else { return }
         await usePhoto(imageData, petController: petController)
     }

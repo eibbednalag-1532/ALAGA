@@ -26,9 +26,18 @@ final class ProfileController: ObservableObject {
         profile?.firstName ?? ""
     }
 
+    //Shows the username, or the first and last name if there is no username
     var displayUsername: String {
-        let name = profile?.username ?? ""
-        return name.isEmpty ? "N/A" : name
+        let name = (profile?.username ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let fullName = "\(profile?.firstName ?? "") \(profile?.lastName ?? "")".trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if !name.isEmpty {
+            return name
+        } else if !fullName.isEmpty {
+            return fullName
+        } else {
+            return "N/A"
+        }
     }
 
     var displayEmail: String {
@@ -62,7 +71,7 @@ final class ProfileController: ObservableObject {
     // MARK: Navigation
     //Profile > Account (edit page)
     func startEditing(router: AppRouter) {
-        username = profile?.username ?? ""
+        username = displayUsername == "N/A" ? "" : displayUsername
         email = profile?.email ?? ""
         contactNumber = profile?.contactNumber ?? ""
         router.push(.account)
